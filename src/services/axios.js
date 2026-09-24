@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: `${import.meta.env.VITE_API_URL}/api`,
+    baseURL: import.meta.env.VITE_API_URL,
     withCredentials: true,
     timeout: 120000,
 });
@@ -14,23 +14,15 @@ export const setTokenGetter = (getToken) => {
 
 api.interceptors.request.use(
     async (config) => {
-
         if (getTokenFunction) {
-
-            const token =
-                await getTokenFunction();
+            const token = await getTokenFunction();
 
             if (token) {
-
-                config.headers.Authorization =
-                    `Bearer ${token}`;
-
+                config.headers.Authorization = `Bearer ${token}`;
             }
-
         }
 
         return config;
-
     },
     (error) => {
         return Promise.reject(error);
