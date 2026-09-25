@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import toast from "react-hot-toast";
@@ -20,6 +20,7 @@ const SEARCH_STORAGE_KEY = "leadgen_search_state";
 
 function SearchBusinesses() {
 
+    const searchCancelledRef = useRef(false);
     const navigate = useNavigate();
 
     const { user } = useUser();
@@ -536,6 +537,16 @@ const loadSavedLeads = async () => {
     return timers;
 };
 
+const handleCancelSearch = () => {
+    searchCancelledRef.current = true;
+
+    setLoading(false);
+    setSearchStage(0);
+
+    toast("Search cancelled.", {
+        duration: 2500,
+    });
+};
     const handleSearch = async (e) => {
 
         e.preventDefault();
@@ -582,6 +593,8 @@ const loadSavedLeads = async () => {
 
        try {
 
+        searchCancelledRef.current = false;
+
     setLoading(true);
 
     const progressTimers =
@@ -595,6 +608,14 @@ const loadSavedLeads = async () => {
                     trimmedKeyword,
                     trimmedLocation
                 );
+
+                if (searchCancelledRef.current) {
+    progressTimers.forEach((timer) =>
+        clearTimeout(timer)
+    );
+
+    return;
+}
 
                 progressTimers.forEach(
     (timer) => clearTimeout(timer)
@@ -738,20 +759,15 @@ if (count > 0) {
 
         <div className="space-y-8">
 
-            <SearchForm
-                keyword={keyword}
-                location={location}
-                loading={loading}
-                onKeywordChange={
-                    setKeyword
-                }
-                onLocationChange={
-                    setLocation
-                }
-                onSubmit={
-                    handleSearch
-                }
-            />
+        <SearchForm
+    keyword={keyword}
+    location={location}
+    loading={loading}
+    onKeywordChange={setKeyword}
+    onLocationChange={setLocation}
+    onSubmit={handleSearch}
+    onCancel={handleCancelSearch}
+/>
 
 
 <SearchResults

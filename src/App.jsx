@@ -1,19 +1,26 @@
 import { Routes, Route } from "react-router-dom";
 import { SignIn, SignUp } from "@clerk/clerk-react";
 
-import WebsiteApp from "../website/WebsiteApp";
+import PublicLayout from "@beforelogin/components/layout/PublicLayout";
+
+import HomePage from "@beforelogin/pages/home/HomePage";
+import PlatformPage from "@beforelogin/pages/platform/PlatformPage";
+import CustomersPage from "@beforelogin/pages/customers/CustomersPage";
+import PricingPage from "@beforelogin/pages/pricing/PricingPage";
+
 import AppRoutes from "./routes/AppRoutes";
 import "./App.css";
 
 function App() {
     return (
         <Routes>
-
-            {/* Public Website */}
-            <Route
-                path="/"
-                element={<WebsiteApp />}
-            />
+            {/* Public website */}
+            <Route element={<PublicLayout />}>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/platform" element={<PlatformPage />} />
+                <Route path="/customers" element={<CustomersPage />} />
+                <Route path="/pricing" element={<PricingPage />} />
+            </Route>
 
             {/* Authentication */}
             <Route
@@ -38,12 +45,8 @@ function App() {
                 }
             />
 
-            {/* Authenticated Application */}
-            <Route
-                path="/app/*"
-                element={<AppRoutes />}
-            />
-
+            {/* Existing application */}
+            <Route path="/app/*" element={<AppRoutes />} />
         </Routes>
     );
 }
