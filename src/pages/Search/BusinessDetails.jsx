@@ -1,7 +1,11 @@
-import { useEffect, useState } from "react";
+import {  useState } from "react";
 import { Link, useParams, useOutletContext } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import toast from "react-hot-toast";
+import {
+    useMutation,
+    useQuery,
+} from "@tanstack/react-query";
 
 import {
     ArrowLeft,
@@ -33,164 +37,157 @@ function BusinessDetails() {
 
     const userId = user?.id;
 
-    const [business, setBusiness] = useState(null);
-    const [loading, setLoading] = useState(true);
+ const [activeTab, setActiveTab] = useState("overview");
 
-    const [activeTab, setActiveTab] = useState("overview");
 
-    const [websiteAnalysis, setWebsiteAnalysis] = useState(null);
-    const [websiteLoading, setWebsiteLoading] = useState(false);
+/* =========================================================
+   BUSINESS DETAILS QUERY
+========================================================= */
 
-    const [digitalMarketing, setDigitalMarketing] = useState(null);
-    const [marketingLoading, setMarketingLoading] = useState(false);
+const businessQuery = useQuery({
 
-    useEffect(() => {
-        if (!id) {
-            return;
+  queryKey: ["business", userId, id],
+enabled: Boolean(userId && id),
+
+    queryFn: async () => {
+
+        const response = await getBusinessDetails(id);
+
+        const existingBusiness =
+            response?.business;
+
+        if (!existingBusiness) {
+            throw new Error("Business not found.");
         }
 
-        let cancelled = false;
 
-        const loadBusiness = async () => {
-            try {
-                setLoading(true);
+        /*
+         * If the business already has a website,
+         * no enrichment request is necessary.
+         */
 
-                setBusiness(null);
-                setWebsiteAnalysis(null);
-                setWebsiteLoading(false);
-
-                setDigitalMarketing(null);
-                setMarketingLoading(false);
-
-                setActiveTab("overview");
-
-                const response = await getBusinessDetails(id);
-
-                const existingBusiness = response?.business;
-
-                if (!existingBusiness) {
-                    throw new Error("Business not found.");
-                }
-
-                if (existingBusiness.website) {
-                    if (!cancelled) {
-                        setBusiness(existingBusiness);
-                    }
-
-                    return;
-                }
-
-                try {
-                    const enriched = await enrichBusiness(id);
-
-                    if (!cancelled) {
-                        setBusiness(
-                            enriched?.business || existingBusiness
-                        );
-                    }
-                } catch (enrichmentError) {
-                    console.error(
-                        "Business enrichment failed:",
-                        enrichmentError
-                    );
-
-                    if (!cancelled) {
-                        setBusiness(existingBusiness);
-                    }
-
-                    toast.error(
-                        "Business loaded, but enrichment failed."
-                    );
-                }
-            } catch (error) {
-                console.error(
-                    "Failed to load business:",
-                    error
-                );
-
-                if (!cancelled) {
-                    setBusiness(null);
-
-                    toast.error(
-                        error?.message ||
-                            "Failed to load business."
-                    );
-                }
-            } finally {
-                if (!cancelled) {
-                    setLoading(false);
-                }
-            }
-        };
-
-        loadBusiness();
-
-        return () => {
-            cancelled = true;
-        };
-    }, [id, userId]);
-
-    const handleWebsiteAnalysis = async () => {
-        if (websiteLoading) {
-            return;
+        if (existingBusiness.website) {
+            return existingBusiness;
         }
 
-        if (!business) {
-            toast.error(
-                "Business information is not available."
-            );
 
-            return;
-        }
-
-        if (!business.google_maps_link) {
-            toast.error(
-                "Google Maps information is not available for this business."
-            );
-
-            return;
-        }
+        /*
+         * Businesses without a website are enriched
+         * automatically.
+         */
 
         try {
-            setWebsiteLoading(true);
 
-            const response = await analyzeWebsite(
+            const enriched =
+                await enrichBusiness(id);
+
+            return (
+                enriched?.business ||
+                existingBusiness
+            );
+
+        } catch (enrichmentError) {
+
+            console.error(
+                "Business enrichment failed:",
+                enrichmentError
+            );
+
+            toast.error(
+                "Business loaded, but enrichment failed."
+            );
+
+            /*
+             * Enrichment failure should NOT make the
+             * entire business query fail.
+             */
+
+            return existingBusiness;
+        }
+
+    },
+
+});
+
+
+const business =
+    businessQuery.data || null;
+
+const loading =
+    businessQuery.isPending;
+
+  /* =========================================================
+   WEBSITE ANALYSIS MUTATION
+========================================================= */
+
+const websiteAnalysisMutation =
+    useMutation({
+
+        mutationFn: async () => {
+
+            if (!business) {
+                throw new Error(
+                    "Business information is not available."
+                );
+            }
+
+            if (!business.google_maps_link) {
+                throw new Error(
+                    "Google Maps information is not available for this business."
+                );
+            }
+
+            return analyzeWebsite(
                 business.google_maps_link
             );
 
+        },
+
+        onSuccess: (response) => {
+
             if (!response) {
-                throw new Error(
-                    "The server returned an empty response."
-                );
-            }
-
-            if (response.success === false) {
-                setWebsiteAnalysis(response);
-
                 toast.error(
-                    response.message ||
-                        "Website analysis failed."
+                    "The server returned an empty response."
                 );
 
                 return;
             }
 
-            setWebsiteAnalysis(response);
+
+            if (response.success === false) {
+
+                toast.error(
+                    response.message ||
+                    "Website analysis failed."
+                );
+
+                return;
+            }
+
 
             if (response.partial === true) {
+
                 toast(
                     "Website analysis completed partially."
                 );
+
             } else {
+
                 toast.success(
                     "Website analysis completed."
                 );
+
             }
-        } catch (error) {
+
+        },
+
+        onError: (error) => {
+
             console.error(
                 "Website analysis failed:",
                 error
             );
+
 
             const {
                 message,
@@ -201,43 +198,33 @@ function BusinessDetails() {
                 "REQUEST_FAILED"
             );
 
-            setWebsiteAnalysis({
-                success: false,
-                partial: false,
-                message,
-                code,
-                errors: [
-                    {
-                        stage: "Website analysis request",
-                        message,
-                    },
-                ],
-            });
 
             toast.error(message);
-        } finally {
-            setWebsiteLoading(false);
-        }
-    };
 
-    const handleDigitalMarketing = async () => {
-        if (
-            digitalMarketing ||
-            marketingLoading
-        ) {
-            return;
-        }
+        },
 
-        if (!business?.website) {
-            toast.error(
-                "This business does not have a website to analyze."
-            );
+    });
 
-            return;
-        }
+    const websiteAnalysis =
+    websiteAnalysisMutation.data || null;
 
-        try {
-            setMarketingLoading(true);
+const websiteLoading =
+    websiteAnalysisMutation.isPending;
+
+  /* =========================================================
+   DIGITAL MARKETING ANALYSIS MUTATION
+========================================================= */
+
+const digitalMarketingMutation =
+    useMutation({
+
+        mutationFn: async () => {
+
+            if (!business?.website) {
+                throw new Error(
+                    "This business does not have a website to analyze."
+                );
+            }
 
             const response =
                 await analyzeDigitalMarketing(
@@ -253,12 +240,25 @@ function BusinessDetails() {
                 );
             }
 
-            setDigitalMarketing(analysis);
-        } catch (error) {
+            return analysis;
+
+        },
+
+        onSuccess: () => {
+
+            toast.success(
+                "Digital marketing analysis completed."
+            );
+
+        },
+
+        onError: (error) => {
+
             console.error(
                 "Digital marketing analysis failed:",
                 error
             );
+
 
             const { message } =
                 getRequestError(
@@ -267,11 +267,19 @@ function BusinessDetails() {
                     "MARKETING_ANALYSIS_FAILED"
                 );
 
+
             toast.error(message);
-        } finally {
-            setMarketingLoading(false);
-        }
-    };
+
+        },
+
+    });
+
+
+const digitalMarketing =
+    digitalMarketingMutation.data || null;
+
+const marketingLoading =
+    digitalMarketingMutation.isPending;
 
     const handleTabChange = (tab) => {
         setActiveTab(tab);
@@ -406,15 +414,24 @@ function BusinessDetails() {
                     theme={theme}
                 />
 
-                <TabButton
-                    active={activeTab === "marketing"}
-                    onClick={() => {
-                        setActiveTab("marketing");
-                        handleDigitalMarketing();
-                    }}
-                    label="Digital Marketing"
-                    theme={theme}
-                />
+            <TabButton
+    active={activeTab === "marketing"}
+    onClick={() => {
+
+        setActiveTab("marketing");
+
+        if (
+            !digitalMarketing &&
+            !digitalMarketingMutation.isPending &&
+            business?.website
+        ) {
+            digitalMarketingMutation.mutate();
+        }
+
+    }}
+    label="Digital Marketing"
+    theme={theme}
+/>
             </div>
 
             {/* Overview */}
@@ -428,7 +445,7 @@ function BusinessDetails() {
                     business={business}
                     websiteAnalysis={websiteAnalysis}
                     websiteLoading={websiteLoading}
-                    onAnalyze={handleWebsiteAnalysis}
+                    onAnalyze={() => websiteAnalysisMutation.mutate()}
                     theme={theme}
                 />
             )}
@@ -439,7 +456,7 @@ function BusinessDetails() {
                     business={business}
                     digitalMarketing={digitalMarketing}
                     marketingLoading={marketingLoading}
-                    onAnalyze={handleDigitalMarketing}
+                    onAnalyze={() => digitalMarketingMutation.mutate()}
                     theme={theme}
                 />
             )}

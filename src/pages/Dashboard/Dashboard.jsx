@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useUser } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -21,36 +21,32 @@ import {
 function Dashboard() {
     const { user } = useUser();
 
-    const [profile, setProfile] = useState(null);
-    const [services, setServices] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const profileQuery = useQuery({
+        queryKey: ["user", "profile", user?.id],
+        queryFn: getProfile,
+        enabled: !!user,
+    });
 
-    useEffect(() => {
-        if (!user) return;
+    const servicesQuery = useQuery({
+        queryKey: ["user", "services", user?.id],
+        queryFn: getUserServices,
+        enabled: !!user,
+    });
 
-        const loadDashboard = async () => {
-            try {
-                const [
-                    profileResponse,
-                    servicesResponse,
-                ] = await Promise.all([
-                    getProfile(user.id),
-                    getUserServices(user.id),
-                ]);
+    const profile = profileQuery.data?.user ?? null;
+    const services = servicesQuery.data?.services ?? [];
 
-                setProfile(profileResponse.user);
-                setServices(servicesResponse.services);
-            } catch (error) {
-                console.error(error);
+    const loading =
+        profileQuery.isPending ||
+        servicesQuery.isPending;
 
-                toast.error("Failed to load dashboard.");
-            } finally {
-                setLoading(false);
-            }
-        };
+    const error =
+        profileQuery.isError ||
+        servicesQuery.isError;
 
-        loadDashboard();
-    }, [user]);
+    if (error) {
+        toast.error("Failed to load dashboard.");
+    }
 
     if (loading) {
         return (

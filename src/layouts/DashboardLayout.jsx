@@ -5,6 +5,15 @@ import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 
 function DashboardLayout() {
+        console.log("DashboardLayout RENDER");
+         useEffect(() => {
+        console.log("DashboardLayout MOUNT");
+
+        return () => {
+            console.log("DashboardLayout UNMOUNT");
+        };
+    }, []);
+
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
     const [theme, setTheme] = useState(() => {

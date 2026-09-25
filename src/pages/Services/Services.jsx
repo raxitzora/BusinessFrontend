@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -14,143 +15,210 @@ import {
 } from "../../services/user.service";
 
 function Services() {
-
     const navigate = useNavigate();
-
     const { user } = useUser();
-
-    const [services, setServices] = useState([]);
+    const queryClient = useQueryClient();
 
     const [selectedServices, setSelectedServices] = useState([]);
 
-    const [loading, setLoading] = useState(true);
+    /*
+    |--------------------------------------------------------------------------
+    | All available services
+    |--------------------------------------------------------------------------
+    */
 
-    const [saving, setSaving] = useState(false);
-    const [profile, setProfile] = useState(null);
+    const servicesQuery = useQuery({
+        queryKey: ["services"],
+        queryFn: getServices,
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | User profile
+    |--------------------------------------------------------------------------
+    */
+
+    const profileQuery = useQuery({
+        queryKey: ["user", "profile", user?.id],
+        queryFn: getProfile,
+        enabled: !!user,
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | User selected services
+    |--------------------------------------------------------------------------
+    */
+
+    const userServicesQuery = useQuery({
+        queryKey: ["user", "services", user?.id],
+        queryFn: getUserServices,
+        enabled: !!user,
+    });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Initialize selected services from server data
+    |--------------------------------------------------------------------------
+    */
 
     useEffect(() => {
-
-        const loadServices = async () => {
-
-            try {
-
-         const [
-    allServices,
-    profileResponse,
-    userServices,
-] = await Promise.all([
-    getServices(),
-    getProfile(user.id),
-    getUserServices(user.id),
-]);
-setProfile(profileResponse.user);
-
-                setServices(allServices.services);
-
-                setSelectedServices(
-                    userServices.services.map(
-                        (service) => service.id
-                    )
-                );
-
-            } catch (error) {
-
-                console.error(error);
-
-                toast.error("Failed to load services.");
-
-            } finally {
-
-                setLoading(false);
-
-            }
-
-        };
-
-        if (user) {
-            loadServices();
-        }
-
-    }, [user]);
-
-    const toggleService = (serviceId) => {
-
-        setSelectedServices((previous) => {
-
-            if (previous.includes(serviceId)) {
-
-                return previous.filter(
-                    (id) => id !== serviceId
-                );
-
-            }
-
-            return [...previous, serviceId];
-
-        });
-
-    };
-
-    const handleSubmit = async () => {
-          if (!profile) {
-
-        toast.error("User profile not found.");
-
-        return;
-
-    }
-
-        if (selectedServices.length === 0) {
-
-            toast.error("Select at least one service.");
-
+        if (!userServicesQuery.data?.services) {
             return;
-
         }
 
-        try {
+        setSelectedServices(
+            userServicesQuery.data.services.map(
+                (service) => service.id
+            )
+        );
+    }, [userServicesQuery.data]);
 
-            setSaving(true);
+    /*
+    |--------------------------------------------------------------------------
+    | Save services mutation
+    |--------------------------------------------------------------------------
+    */
 
-            await saveUserServices({
-                userId: profile.id,
-                services: selectedServices,
+    const saveServicesMutation = useMutation({
+        mutationFn: (services) =>
+            saveUserServices({
+                userId: profileQuery.data?.user?.id,
+                services,
+            }),
+
+        onSuccess: async () => {
+            /*
+             * The user's selected services have changed.
+             *
+             * Mark the cached services data as stale so
+             * the next consumer gets fresh data.
+             */
+
+            await queryClient.invalidateQueries({
+                queryKey: ["user", "services", user?.id],
             });
+
+            /*
+             * Dashboard uses the same user-services query.
+             * Invalidating it keeps Dashboard synchronized.
+             */
 
             toast.success("Services updated.");
 
-            navigate("/dashboard");
+            navigate("/app/dashboard");
+        },
 
-        } catch (error) {
-
+        onError: (error) => {
             console.error(error);
 
             toast.error("Unable to save services.");
+        },
+    });
 
-        } finally {
+    /*
+    |--------------------------------------------------------------------------
+    | Loading
+    |--------------------------------------------------------------------------
+    */
 
-            setSaving(false);
+    const loading =
+        servicesQuery.isPending ||
+        profileQuery.isPending ||
+        userServicesQuery.isPending;
 
+    /*
+    |--------------------------------------------------------------------------
+    | Error
+    |--------------------------------------------------------------------------
+    */
+
+    const hasError =
+        servicesQuery.isError ||
+        profileQuery.isError ||
+        userServicesQuery.isError;
+
+    useEffect(() => {
+        if (!hasError) {
+            return;
         }
 
+        toast.error("Failed to load services.");
+    }, [hasError]);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Toggle service
+    |--------------------------------------------------------------------------
+    */
+
+    const toggleService = (serviceId) => {
+        setSelectedServices((previous) => {
+            if (previous.includes(serviceId)) {
+                return previous.filter(
+                    (id) => id !== serviceId
+                );
+            }
+
+            return [...previous, serviceId];
+        });
     };
 
-    if (loading) {
+    /*
+    |--------------------------------------------------------------------------
+    | Submit
+    |--------------------------------------------------------------------------
+    */
 
+    const handleSubmit = () => {
+        const profile = profileQuery.data?.user;
+
+        if (!profile) {
+            toast.error("User profile not found.");
+            return;
+        }
+
+        if (selectedServices.length === 0) {
+            toast.error("Select at least one service.");
+            return;
+        }
+
+        saveServicesMutation.mutate(selectedServices);
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | Loading UI
+    |--------------------------------------------------------------------------
+    */
+
+    if (loading) {
         return (
             <div className="text-white">
                 Loading...
             </div>
         );
-
     }
 
-    return (
+    /*
+    |--------------------------------------------------------------------------
+    | Data
+    |--------------------------------------------------------------------------
+    */
 
+    const services =
+        servicesQuery.data?.services || [];
+
+    /*
+    |--------------------------------------------------------------------------
+    | UI
+    |--------------------------------------------------------------------------
+    */
+
+    return (
         <div className="mx-auto max-w-5xl">
 
             <div>
-
                 <h1 className="text-3xl font-bold text-white">
                     Your Services
                 </h1>
@@ -158,18 +226,15 @@ setProfile(profileResponse.user);
                 <p className="mt-2 text-zinc-400">
                     Select the services you provide.
                 </p>
-
             </div>
 
             <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
 
                 {services.map((service) => {
-
                     const selected =
                         selectedServices.includes(service.id);
 
                     return (
-
                         <button
                             key={service.id}
                             onClick={() =>
@@ -189,23 +254,15 @@ setProfile(profileResponse.user);
                                 }
                             `}
                         >
-
                             <h2 className="text-lg font-semibold text-white">
-
                                 {service.name}
-
                             </h2>
 
                             <p className="mt-3 text-sm text-zinc-400">
-
                                 {service.credit_cost} Credits
-
                             </p>
-
                         </button>
-
                     );
-
                 })}
 
             </div>
@@ -214,22 +271,18 @@ setProfile(profileResponse.user);
 
                 <button
                     onClick={handleSubmit}
-                    disabled={saving}
+                    disabled={saveServicesMutation.isPending}
                     className="rounded-lg bg-violet-600 px-6 py-3 font-medium text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-
-                    {saving
+                    {saveServicesMutation.isPending
                         ? "Saving..."
                         : "Save Services"}
-
                 </button>
 
             </div>
 
         </div>
-
     );
-
 }
 
 export default Services;

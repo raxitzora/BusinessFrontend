@@ -7,6 +7,7 @@ import {
 
 import { UserButton } from "@clerk/clerk-react";
 import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
 
 const pageTitles = {
     "/app/dashboard": "Dashboard",
@@ -21,6 +22,15 @@ const pageTitles = {
 
 function Topbar({ theme, setTheme }) {
     const { pathname } = useLocation();
+      console.log("TOPBAR RENDER");
+
+    useEffect(() => {
+        console.log("TOPBAR MOUNT");
+
+        return () => {
+            console.log("TOPBAR UNMOUNT");
+        };
+    }, []);
 
     const title = pageTitles[pathname] || "LeadFlow";
 
@@ -31,6 +41,7 @@ function Topbar({ theme, setTheme }) {
             currentTheme === "dark" ? "light" : "dark"
         );
     };
+  
 
     return (
         <header className="flex h-16 items-center justify-between border-b border-zinc-800 bg-zinc-950 px-6">
