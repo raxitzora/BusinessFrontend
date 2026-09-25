@@ -22,24 +22,42 @@ const SEARCH_STORAGE_KEY = "leadgen_search_state";
 function SearchBusinesses() {
 
     const searchCancelledRef = useRef(false);
+
     const navigate = useNavigate();
-    
 
     const { user } = useUser();
+
     const { theme } = useOutletContext();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Search State
+    |--------------------------------------------------------------------------
+    */
 
     const [keyword, setKeyword] = useState("");
 
     const [location, setLocation] = useState("");
 
+    const [areas, setAreas] = useState([]);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Search Result State
+    |--------------------------------------------------------------------------
+    */
+
     const [loading, setLoading] = useState(false);
+
     const [searchStage, setSearchStage] = useState(0);
 
     const [businesses, setBusinesses] = useState([]);
 
     const [savedLeads, setSavedLeads] = useState([]);
 
-const [savingLeadId, setSavingLeadId] = useState(null);
+    const [savingLeadId, setSavingLeadId] = useState(null);
 
     const [searchPerformed, setSearchPerformed] =
         useState(false);
@@ -60,6 +78,7 @@ const [savingLeadId, setSavingLeadId] = useState(null);
     const saveSearchState = ({
         keyword,
         location,
+        areas,
         businesses,
         searchPerformed,
         currentPage,
@@ -73,6 +92,7 @@ const [savingLeadId, setSavingLeadId] = useState(null);
                 JSON.stringify({
                     keyword,
                     location,
+                    areas,
                     businesses,
                     searchPerformed,
                     currentPage,
@@ -125,12 +145,19 @@ const [savingLeadId, setSavingLeadId] = useState(null);
 
             }
 
+
             setKeyword(
                 parsed.keyword || ""
             );
 
             setLocation(
                 parsed.location || ""
+            );
+
+            setAreas(
+                Array.isArray(parsed.areas)
+                    ? parsed.areas
+                    : []
             );
 
             setBusinesses(
@@ -166,101 +193,126 @@ const [savingLeadId, setSavingLeadId] = useState(null);
 
     };
 
-const loadSavedLeads = async () => {
 
-    try {
+    /*
+    |--------------------------------------------------------------------------
+    | Load Saved Leads
+    |--------------------------------------------------------------------------
+    */
 
-        const response = await getSavedLeads();
+    const loadSavedLeads = async () => {
 
-        const savedIds =
-            (response.businesses || []).map(
-                (business) => Number(business.id)
+        try {
+
+            const response =
+                await getSavedLeads();
+
+            const savedIds =
+                (response.businesses || []).map(
+                    (business) =>
+                        Number(business.id)
+                );
+
+            console.log(
+                "Loaded saved lead IDs:",
+                savedIds
             );
 
-        console.log("Loaded saved lead IDs:", savedIds);
+            setSavedLeads(savedIds);
 
-        setSavedLeads(savedIds);
+        } catch (error) {
 
-    } catch (error) {
-
-        console.error(
-            "Failed to load saved leads:",
-            error?.response?.data || error
-        );
-
-    }
-
-};
-
- const handleSaveLead = async (businessId) => {
-
-    const alreadySaved =
-        savedLeads.includes(businessId);
-
-    try {
-
-        setSavingLeadId(businessId);
-
-        if (alreadySaved) {
-
-            await removeSavedLead(
-                businessId
-            );
-
-            setSavedLeads((previous) =>
-                previous.filter(
-                    (id) => id !== businessId
-                )
-            );
-
-            toast.success(
-                "Lead removed from saved leads."
-            );
-
-        } else {
-
-            await saveLead(
-                businessId
-            );
-
-            setSavedLeads((previous) => {
-
-                if (previous.includes(businessId)) {
-                    return previous;
-                }
-
-                return [
-                    ...previous,
-                    businessId,
-                ];
-
-            });
-
-            toast.success(
-                "Lead saved successfully."
+            console.error(
+                "Failed to load saved leads:",
+                error?.response?.data || error
             );
 
         }
 
-    } catch (error) {
+    };
 
-        console.error(
-            "Save/Unsave Lead Error:",
-            error?.response?.data || error
-        );
 
-        toast.error(
-            error?.response?.data?.message ||
-            "Failed to update saved lead."
-        );
+    /*
+    |--------------------------------------------------------------------------
+    | Save / Remove Lead
+    |--------------------------------------------------------------------------
+    */
 
-    } finally {
+    const handleSaveLead = async (businessId) => {
 
-        setSavingLeadId(null);
+        const alreadySaved =
+            savedLeads.includes(businessId);
 
-    }
+        try {
 
-};
+            setSavingLeadId(businessId);
+
+            if (alreadySaved) {
+
+                await removeSavedLead(
+                    businessId
+                );
+
+                setSavedLeads((previous) =>
+                    previous.filter(
+                        (id) =>
+                            id !== businessId
+                    )
+                );
+
+                toast.success(
+                    "Lead removed from saved leads."
+                );
+
+            } else {
+
+                await saveLead(
+                    businessId
+                );
+
+                setSavedLeads((previous) => {
+
+                    if (
+                        previous.includes(
+                            businessId
+                        )
+                    ) {
+                        return previous;
+                    }
+
+                    return [
+                        ...previous,
+                        businessId,
+                    ];
+
+                });
+
+                toast.success(
+                    "Lead saved successfully."
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Save/Unsave Lead Error:",
+                error?.response?.data || error
+            );
+
+            toast.error(
+                error?.response?.data?.message ||
+                "Failed to update saved lead."
+            );
+
+        } finally {
+
+            setSavingLeadId(null);
+
+        }
+
+    };
+
 
     /*
     |--------------------------------------------------------------------------
@@ -292,95 +344,101 @@ const loadSavedLeads = async () => {
                     start + CONCURRENCY
                 );
 
-          await Promise.all(
-    batch.map(async (business) => {
+            await Promise.all(
+                batch.map(async (business) => {
 
-        /*
-        |--------------------------------------------------------------------------
-        | Website already known
-        |--------------------------------------------------------------------------
-        */
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Website already known
+                    |--------------------------------------------------------------------------
+                    */
 
-        if (business.website) {
+                    if (business.website) {
 
-            setBusinesses((previous) =>
-                previous.map((item) =>
-                    item.id === business.id
-                        ? {
-                              ...item,
-                              contactStatus: "done",
-                          }
-                        : item
-                )
+                        setBusinesses((previous) =>
+                            previous.map((item) =>
+                                item.id === business.id
+                                    ? {
+                                        ...item,
+                                        contactStatus:
+                                            "done",
+                                    }
+                                    : item
+                            )
+                        );
+
+                        return;
+
+                    }
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Start Checking
+                    |--------------------------------------------------------------------------
+                    */
+
+                    setBusinesses((previous) =>
+                        previous.map((item) =>
+                            item.id === business.id
+                                ? {
+                                    ...item,
+                                    contactStatus:
+                                        "checking",
+                                }
+                                : item
+                        )
+                    );
+
+
+                    try {
+
+                        const response =
+                            await enrichBusiness(
+                                business.id
+                            );
+
+                        const enrichedBusiness =
+                            response?.business;
+
+
+                        setBusinesses((previous) =>
+                            previous.map((item) =>
+                                item.id === business.id
+                                    ? {
+                                        ...item,
+                                        ...(enrichedBusiness || {}),
+                                        contactStatus:
+                                            "done",
+                                    }
+                                    : item
+                            )
+                        );
+
+                    } catch (error) {
+
+                        console.error(
+                            `Failed to enrich ${business.business_name}:`,
+                            error?.response?.data ||
+                            error
+                        );
+
+                        setBusinesses((previous) =>
+                            previous.map((item) =>
+                                item.id === business.id
+                                    ? {
+                                        ...item,
+                                        contactStatus:
+                                            "failed",
+                                    }
+                                    : item
+                            )
+                        );
+
+                    }
+
+                })
             );
-
-            return;
-        }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Start Checking
-        |--------------------------------------------------------------------------
-        */
-
-        setBusinesses((previous) =>
-            previous.map((item) =>
-                item.id === business.id
-                    ? {
-                          ...item,
-                          contactStatus: "checking",
-                      }
-                    : item
-            )
-        );
-
-
-        try {
-
-            const response =
-                await enrichBusiness(
-                    business.id
-                );
-
-            const enrichedBusiness =
-                response?.business;
-
-
-            setBusinesses((previous) =>
-                previous.map((item) =>
-                    item.id === business.id
-                        ? {
-                              ...item,
-                              ...(enrichedBusiness || {}),
-                              contactStatus: "done",
-                          }
-                        : item
-                )
-            );
-
-        } catch (error) {
-
-            console.error(
-                `Failed to enrich ${business.business_name}:`,
-                error?.response?.data || error
-            );
-
-            setBusinesses((previous) =>
-                previous.map((item) =>
-                    item.id === business.id
-                        ? {
-                              ...item,
-                              contactStatus: "failed",
-                          }
-                        : item
-                )
-            );
-
-        }
-
-    })
-);
 
         }
 
@@ -402,6 +460,7 @@ const loadSavedLeads = async () => {
         saveSearchState({
             keyword,
             location,
+            areas,
             businesses,
             searchPerformed,
             currentPage,
@@ -411,6 +470,7 @@ const loadSavedLeads = async () => {
     }, [
         keyword,
         location,
+        areas,
         businesses,
         searchPerformed,
         currentPage,
@@ -429,19 +489,17 @@ const loadSavedLeads = async () => {
         if (!user) {
             return;
         }
+
         loadSavedLeads();
 
         const restored =
             restoreSearchState();
 
         if (restored) {
-
             return;
-
         }
 
-
-    }, [user,currentPage]);
+    }, [user, currentPage]);
 
 
     /*
@@ -465,7 +523,6 @@ const loadSavedLeads = async () => {
                     currentPage
                 );
 
-
             const loadedBusinesses =
                 (response.businesses || [])
                     .map(
@@ -486,7 +543,6 @@ const loadSavedLeads = async () => {
             );
 
             setSearchPerformed(false);
-
 
             enrichVisibleBusinesses(
                 loadedBusinesses
@@ -513,43 +569,65 @@ const loadSavedLeads = async () => {
 
     /*
     |--------------------------------------------------------------------------
+    | Search Progress
+    |--------------------------------------------------------------------------
+    */
+
+    const startSearchProgress = () => {
+
+        setSearchStage(0);
+
+        const timers = [
+
+            setTimeout(() => {
+                setSearchStage(1);
+            }, 2200),
+
+            setTimeout(() => {
+                setSearchStage(2);
+            }, 6000),
+
+            setTimeout(() => {
+                setSearchStage(3);
+            }, 11000),
+
+        ];
+
+        return timers;
+
+    };
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cancel Search
+    |--------------------------------------------------------------------------
+    */
+
+    const handleCancelSearch = () => {
+
+        searchCancelledRef.current = true;
+
+        setLoading(false);
+
+        setSearchStage(0);
+
+        toast(
+            "Search cancelled.",
+            {
+                duration: 2500,
+            }
+        );
+
+    };
+
+
+    /*
+    |--------------------------------------------------------------------------
     | Search
     |--------------------------------------------------------------------------
     */
 
-   const startSearchProgress = () => {
-
-    setSearchStage(0);
-
-    const timers = [
-
-        setTimeout(() => {
-            setSearchStage(1);
-        }, 2200),
-
-        setTimeout(() => {
-            setSearchStage(2);
-        }, 6000),
-
-        setTimeout(() => {
-            setSearchStage(3);
-        }, 11000),
-
-    ];
-
-    return timers;
-};
-
-const handleCancelSearch = () => {
-    searchCancelledRef.current = true;
-
-    setLoading(false);
-    setSearchStage(0);
-
-    toast("Search cancelled.", {
-        duration: 2500,
-    });
-};
     const handleSearch = async (e) => {
 
         e.preventDefault();
@@ -570,6 +648,14 @@ const handleCancelSearch = () => {
 
         const trimmedLocation =
             location.trim();
+
+        const cleanAreas =
+            areas
+                .map(
+                    (area) =>
+                        area.trim()
+                )
+                .filter(Boolean);
 
 
         if (!trimmedKeyword) {
@@ -594,37 +680,44 @@ const handleCancelSearch = () => {
         }
 
 
-       try {
+        try {
 
-        searchCancelledRef.current = false;
+            searchCancelledRef.current = false;
 
-    setLoading(true);
+            setLoading(true);
 
-    const progressTimers =
-        startSearchProgress();
+            const progressTimers =
+                startSearchProgress();
 
-    setCurrentPage(1);
+            setCurrentPage(1);
 
 
             const response =
                 await searchBusinesses(
                     trimmedKeyword,
-                    trimmedLocation
+                    trimmedLocation,
+                    cleanAreas
                 );
 
-                if (searchCancelledRef.current) {
-    progressTimers.forEach((timer) =>
-        clearTimeout(timer)
-    );
 
-    return;
-}
+            if (searchCancelledRef.current) {
 
                 progressTimers.forEach(
-    (timer) => clearTimeout(timer)
-);
+                    (timer) =>
+                        clearTimeout(timer)
+                );
 
-setSearchStage(4);
+                return;
+
+            }
+
+
+            progressTimers.forEach(
+                (timer) =>
+                    clearTimeout(timer)
+            );
+
+            setSearchStage(4);
 
 
             const foundBusinesses =
@@ -644,6 +737,10 @@ setSearchStage(4);
 
             setLocation(
                 trimmedLocation
+            );
+
+            setAreas(
+                cleanAreas
             );
 
             setBusinesses(
@@ -672,6 +769,9 @@ setSearchStage(4);
                 location:
                     trimmedLocation,
 
+                areas:
+                    cleanAreas,
+
                 businesses:
                     foundBusinesses,
 
@@ -697,27 +797,32 @@ setSearchStage(4);
             );
 
 
-           const count = response.count ?? 0;
+            const count =
+                response.count ?? 0;
 
-if (count > 0) {
+            if (count > 0) {
 
-    toast.success(
-        `${count} businesses found in ${trimmedLocation}`,
-        {
-            duration: 4000,
-        }
-    );
+                toast.success(
+                    `${count} businesses found in ${cleanAreas.length
+                        ? cleanAreas.join(", ")
+                        : trimmedLocation}`,
+                    {
+                        duration: 4000,
+                    }
+                );
 
-} else {
+            } else {
 
-    toast(
-        `No businesses found in ${trimmedLocation}`,
-        {
-            duration: 4000,
-        }
-    );
+                toast(
+                    `No businesses found in ${cleanAreas.length
+                        ? cleanAreas.join(", ")
+                        : trimmedLocation}`,
+                    {
+                        duration: 4000,
+                    }
+                );
 
-}
+            }
 
         } catch (error) {
 
@@ -762,33 +867,39 @@ if (count > 0) {
 
         <div className="space-y-8">
 
-        <SearchForm
-    keyword={keyword}
-    theme={theme}
-    location={location}
-    loading={loading}
-    onKeywordChange={setKeyword}
-    onLocationChange={setLocation}
-    onSubmit={handleSearch}
-    onCancel={handleCancelSearch}
-/>
+            <SearchForm
+                keyword={keyword}
+                theme={theme}
+                location={location}
+                areas={areas}
+                loading={loading}
+                onKeywordChange={setKeyword}
+                onLocationChange={setLocation}
+                onAreasChange={setAreas}
+                onSubmit={handleSearch}
+                onCancel={handleCancelSearch}
+            />
 
 
-<SearchResults
-    businesses={businesses}
-    theme={theme}
-    loading={loading}
-    searchPerformed={searchPerformed}
-    keyword={keyword}
-    location={location}
-    searchStage={searchStage}
-    onBusinessClick={(id) =>
-        navigate(`/app/business/${id}`)
-    }
-    onSaveLead={handleSaveLead}
-    savedLeads={savedLeads}
-    savingLeadId={savingLeadId}
-/>
+            <SearchResults
+                businesses={businesses}
+                theme={theme}
+                loading={loading}
+                searchPerformed={searchPerformed}
+                keyword={keyword}
+                location={location}
+                    areas={areas}
+
+                searchStage={searchStage}
+                onBusinessClick={(id) =>
+                    navigate(
+                        `/app/business/${id}`
+                    )
+                }
+                onSaveLead={handleSaveLead}
+                savedLeads={savedLeads}
+                savingLeadId={savingLeadId}
+            />
 
 
             <SearchPagination

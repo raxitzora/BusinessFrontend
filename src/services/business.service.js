@@ -6,9 +6,11 @@ import api from "./axios";
 |--------------------------------------------------------------------------
 */
 
+
 export const searchBusinesses = async (
     keyword,
-    location
+    location,
+    areas = []
 ) => {
 
     const { data } = await api.post(
@@ -16,6 +18,7 @@ export const searchBusinesses = async (
         {
             keyword,
             location,
+            areas,
         }
     );
 

@@ -97,7 +97,7 @@ function SidebarItem({
                             ? "bg-[#242424] text-white"
                             : "bg-[#eeeeef] text-[#111111]"
                         : isDark
-                            ? "text-[#a1a1a1] hover:bg-[#1c1c1c] hover:text-[#f5f5f5]"
+    ? "text-white hover:bg-[#1c1c1c] hover:text-white"
                             : "text-[#666] hover:bg-[#eeeeef] hover:text-[#111111]"
                 }
                 `
@@ -118,8 +118,8 @@ function SidebarItem({
                                         ? "text-white"
                                         : "text-[#111111]"
                                     : isDark
-                                        ? "text-[#9a9a9a] group-hover:text-[#e5e5e5]"
-                                        : "text-[#888] group-hover:text-[#222]"
+    ? "text-white group-hover:text-white"
+                                        : "text-white group-hover:text-[#222]"
                             }
                         `}
                     />
@@ -150,7 +150,7 @@ function SidebarSection({
                     <span
                         className={`text-[12px] font-medium tracking-[-0.01em] ${
                             isDark
-                                ? "text-[#777]"
+    ? "text-white"
                                 : "text-[#999]"
                         }`}
                     >
@@ -390,8 +390,8 @@ function Sidebar({
                             active:scale-95
                             ${
                                 isDark
-                                    ? "text-[#777] hover:bg-[#1b1b1b] hover:text-white"
-                                    : "text-[#888] hover:bg-[#eeeeee] hover:text-[#111]"
+                                    ? "text-white hover:bg-[#1b1b1b] hover:text-white"
+                                    : "text-white hover:bg-[#eeeeee] hover:text-[#111]"
                             }
                         `}
                     >
@@ -430,8 +430,8 @@ function Sidebar({
                         active:scale-95
                         ${
                             isDark
-                                ? "border-[#303030] bg-[#111111] text-[#888] hover:border-[#444] hover:bg-[#1d1d1d] hover:text-white"
-                                : "border-[#d9d9d9] bg-white text-[#777] hover:border-[#c8c8c8] hover:bg-[#f5f5f5] hover:text-[#111]"
+                                ? "border-[#303030] bg-[#111111] text-white hover:border-[#444] hover:bg-[#1d1d1d] hover:text-white"
+                                : "border-[#d9d9d9] bg-white text-white hover:border-[#c8c8c8] hover:bg-[#f5f5f5] hover:text-[#111]"
                         }
                     `}
                 >
@@ -536,7 +536,7 @@ function Sidebar({
                                     tracking-[-0.01em]
                                     ${
                                         isDark
-                                            ? "text-[#e5e5e5]"
+    ? "text-white"
                                             : "text-[#222]"
                                     }
                                 `}
@@ -550,8 +550,8 @@ function Sidebar({
                                     text-[11px]
                                     ${
                                         isDark
-                                            ? "text-[#666]"
-                                            : "text-[#999]"
+    ? "text-white"                                     
+           : "text-[#999]"
                                     }
                                 `}
                             >
