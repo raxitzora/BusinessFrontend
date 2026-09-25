@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+
 import {
     Search,
     MapPin,
@@ -10,7 +11,9 @@ function SearchProgress({
     keyword,
     location,
     stage = 0,
+    theme,
 }) {
+    const isDark = theme === "dark";
 
     const steps = [
         {
@@ -47,9 +50,24 @@ function SearchProgress({
     const Icon = currentStep.icon;
 
     return (
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 px-6 py-8">
-
+        <section
+            className={`
+                rounded-[12px]
+                border
+                px-6
+                py-8
+                transition-all
+                duration-200
+                ${
+                    isDark
+                        ? "border-[#242424] bg-[#101010]"
+                        : "border-[#dedede] bg-white"
+                }
+            `}
+        >
             <div className="mx-auto flex max-w-xl flex-col items-center text-center">
+
+                {/* Animated Icon */}
 
                 <div className="relative flex h-14 w-14 items-center justify-center">
 
@@ -66,7 +84,19 @@ function SearchProgress({
                             duration: 0.45,
                             ease: [0.22, 1, 0.36, 1],
                         }}
-                        className="absolute inset-0 rounded-2xl border border-violet-500/20 bg-violet-500/5"
+                        className={`
+                            absolute
+                            inset-0
+                            rounded-2xl
+                            border
+                            transition-colors
+                            duration-200
+                            ${
+                                isDark
+                                    ? "border-blue-500/20 bg-blue-500/[0.05]"
+                                    : "border-blue-200 bg-blue-50"
+                            }
+                        `}
                     />
 
                     <AnimatePresence mode="wait">
@@ -92,21 +122,39 @@ function SearchProgress({
                                 duration: 0.3,
                                 ease: "easeOut",
                             }}
-                            className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/10"
+                            className={`
+                                relative
+                                flex
+                                h-10
+                                w-10
+                                items-center
+                                justify-center
+                                rounded-xl
+                                transition-colors
+                                duration-200
+                                ${
+                                    isDark
+                                        ? "bg-blue-500/10"
+                                        : "bg-blue-50"
+                                }
+                            `}
                         >
-
                             <Icon
                                 size={20}
                                 strokeWidth={1.7}
-                                className="text-violet-400"
+                                className={
+                                    isDark
+                                        ? "text-blue-400"
+                                        : "text-blue-500"
+                                }
                             />
-
                         </motion.div>
 
                     </AnimatePresence>
 
                 </div>
 
+                {/* Text */}
 
                 <div className="mt-5 min-h-[74px]">
 
@@ -131,26 +179,48 @@ function SearchProgress({
                                 ease: [0.22, 1, 0.36, 1],
                             }}
                         >
-
-                            <h3 className="text-lg font-medium text-white">
+                            <h3
+                                className={`
+                                    text-lg
+                                    font-medium
+                                    transition-colors
+                                    duration-200
+                                    ${
+                                        isDark
+                                            ? "text-white"
+                                            : "text-[#171717]"
+                                    }
+                                `}
+                            >
                                 {currentStep.title}
                             </h3>
 
-                            <p className="mt-2 text-sm text-zinc-500">
+                            <p
+                                className={`
+                                    mt-2
+                                    text-sm
+                                    transition-colors
+                                    duration-200
+                                    ${
+                                        isDark
+                                            ? "text-zinc-500"
+                                            : "text-[#777]"
+                                    }
+                                `}
+                            >
                                 {currentStep.description}
                             </p>
-
                         </motion.div>
 
                     </AnimatePresence>
 
                 </div>
 
+                {/* Progress */}
 
                 <div className="mt-6 flex items-center gap-2">
 
                     {steps.map((_, index) => (
-
                         <motion.div
                             key={index}
                             animate={{
@@ -166,20 +236,41 @@ function SearchProgress({
                             transition={{
                                 duration: 0.3,
                             }}
-                            className="h-1 rounded-full bg-violet-400"
+                            className={`
+                                h-1
+                                rounded-full
+                                transition-colors
+                                duration-200
+                                ${
+                                    isDark
+                                        ? "bg-blue-400"
+                                        : "bg-blue-500"
+                                }
+                            `}
                         />
-
                     ))}
 
                 </div>
 
+                {/* Footer */}
 
-                <p className="mt-5 text-xs text-zinc-600">
+                <p
+                    className={`
+                        mt-5
+                        text-xs
+                        transition-colors
+                        duration-200
+                        ${
+                            isDark
+                                ? "text-zinc-600"
+                                : "text-[#999]"
+                        }
+                    `}
+                >
                     This may take a few moments.
                 </p>
 
             </div>
-
         </section>
     );
 }

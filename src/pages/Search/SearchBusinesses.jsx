@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import toast from "react-hot-toast";
+import { useOutletContext } from "react-router-dom";
 
 import {
     getBusinesses,
@@ -22,8 +23,10 @@ function SearchBusinesses() {
 
     const searchCancelledRef = useRef(false);
     const navigate = useNavigate();
+    
 
     const { user } = useUser();
+    const { theme } = useOutletContext();
 
     const [keyword, setKeyword] = useState("");
 
@@ -761,6 +764,7 @@ if (count > 0) {
 
         <SearchForm
     keyword={keyword}
+    theme={theme}
     location={location}
     loading={loading}
     onKeywordChange={setKeyword}
@@ -772,6 +776,7 @@ if (count > 0) {
 
 <SearchResults
     businesses={businesses}
+    theme={theme}
     loading={loading}
     searchPerformed={searchPerformed}
     keyword={keyword}
@@ -796,6 +801,7 @@ if (count > 0) {
                 onPageChange={
                     handlePageChange
                 }
+                theme={theme}
             />
 
         </div>

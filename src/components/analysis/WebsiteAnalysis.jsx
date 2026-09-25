@@ -87,7 +87,111 @@ import {
 |--------------------------------------------------------------------------
 */
 
-function WebsiteAnalysis({ loading, data }) {
+
+function ThemeShell({ theme = "dark", children }) {
+    return (
+        <div className={`leadflow-analysis ${theme === "light" ? "leadflow-analysis-light" : "leadflow-analysis-dark"}`}>
+            <style>{`
+                .leadflow-analysis {
+                    color: #18181b;
+                }
+
+                .leadflow-analysis-light .bg-zinc-900 {
+                    background-color: #ffffff !important;
+                }
+                .leadflow-analysis-light .bg-zinc-950,
+                .leadflow-analysis-light .bg-zinc-950\\/50 {
+                    background-color: #fafafa !important;
+                }
+                .leadflow-analysis-light .bg-zinc-800 {
+                    background-color: #f1f1f3 !important;
+                }
+                .leadflow-analysis-light .bg-zinc-950\\/50 {
+                    background-color: #fafafa !important;
+                }
+
+                .leadflow-analysis-light .border-zinc-800 {
+                    border-color: #e4e4e7 !important;
+                }
+                .leadflow-analysis-light .border-zinc-700 {
+                    border-color: #d4d4d8 !important;
+                }
+
+                .leadflow-analysis-light .text-white {
+                    color: #18181b !important;
+                }
+                .leadflow-analysis-light .text-zinc-200 {
+                    color: #27272a !important;
+                }
+                .leadflow-analysis-light .text-zinc-300 {
+                    color: #3f3f46 !important;
+                }
+                .leadflow-analysis-light .text-zinc-400 {
+                    color: #71717a !important;
+                }
+                .leadflow-analysis-light .text-zinc-500 {
+                    color: #71717a !important;
+                }
+                .leadflow-analysis-light .text-zinc-600 {
+                    color: #a1a1aa !important;
+                }
+
+                .leadflow-analysis-light .bg-violet-500\\/10 {
+                    background-color: #eff6ff !important;
+                }
+                .leadflow-analysis-light .text-violet-400,
+                .leadflow-analysis-light .text-violet-300 {
+                    color: #2563eb !important;
+                }
+
+                .leadflow-analysis-light .bg-yellow-500\\/5 {
+                    background-color: #fffbeb !important;
+                }
+                .leadflow-analysis-light .border-yellow-500\\/20 {
+                    border-color: #fde68a !important;
+                }
+                .leadflow-analysis-light .text-yellow-400 {
+                    color: #d97706 !important;
+                }
+
+                .leadflow-analysis-light .bg-red-500\\/5 {
+                    background-color: #fef2f2 !important;
+                }
+                .leadflow-analysis-light .bg-red-500\\/10 {
+                    background-color: #fee2e2 !important;
+                }
+                .leadflow-analysis-light .border-red-500\\/20,
+                .leadflow-analysis-light .border-red-500\\/10 {
+                    border-color: #fecaca !important;
+                }
+                .leadflow-analysis-light .text-red-400 {
+                    color: #dc2626 !important;
+                }
+
+                .leadflow-analysis-light .bg-emerald-500\\/5 {
+                    background-color: #f0fdf4 !important;
+                }
+                .leadflow-analysis-light .bg-emerald-500\\/10 {
+                    background-color: #dcfce7 !important;
+                }
+                .leadflow-analysis-light .border-emerald-500\\/10 {
+                    border-color: #bbf7d0 !important;
+                }
+                .leadflow-analysis-light .text-emerald-400 {
+                    color: #16a34a !important;
+                }
+
+                .leadflow-analysis-light .bg-zinc-900:hover,
+                .leadflow-analysis-light .bg-zinc-950:hover {
+                    background-color: #f7f7f8 !important;
+                }
+            `}</style>
+            {children}
+        </div>
+    );
+}
+
+function WebsiteAnalysis({ loading, data, theme = "dark" }) {
 
     /*
     |--------------------------------------------------------------------------
@@ -97,7 +201,7 @@ function WebsiteAnalysis({ loading, data }) {
 
     if (loading) {
 
-        return <WebsiteAnalysisSkeleton />;
+        return <WebsiteAnalysisSkeleton theme={theme} />;
 
     }
 
@@ -122,7 +226,8 @@ function WebsiteAnalysis({ loading, data }) {
     if (data.success === false) {
 
         return (
-            <section className="space-y-6">
+            <ThemeShell theme={theme}>
+                <section className="space-y-6">
 
                 <SectionHeader
                     icon={Globe}
@@ -139,7 +244,8 @@ function WebsiteAnalysis({ loading, data }) {
                     code={data.code}
                 />
 
-            </section>
+                </section>
+            </ThemeShell>
         );
 
     }
@@ -182,7 +288,7 @@ function WebsiteAnalysis({ loading, data }) {
     if (reachability?.reachable === false) {
 
         return (
-
+            <ThemeShell theme={theme}>
             <section className="space-y-6">
 
                 <SectionHeader
@@ -205,6 +311,7 @@ function WebsiteAnalysis({ loading, data }) {
                 />
 
             </section>
+            </ThemeShell>
 
         );
 
@@ -217,7 +324,7 @@ function WebsiteAnalysis({ loading, data }) {
     */
 
     return (
-
+        <ThemeShell theme={theme}>
         <section className="space-y-8">
 
             {/* Partial Analysis */}
@@ -287,6 +394,7 @@ function WebsiteAnalysis({ loading, data }) {
             />
 
         </section>
+        </ThemeShell>
 
     );
 
@@ -298,10 +406,10 @@ function WebsiteAnalysis({ loading, data }) {
 |--------------------------------------------------------------------------
 */
 
-function WebsiteAnalysisSkeleton() {
+function WebsiteAnalysisSkeleton({ theme = "dark" }) {
 
     return (
-
+        <ThemeShell theme={theme}>
         <section
             className="space-y-8"
             aria-busy="true"
@@ -372,6 +480,7 @@ function WebsiteAnalysisSkeleton() {
             />
 
         </section>
+        </ThemeShell>
 
     );
 

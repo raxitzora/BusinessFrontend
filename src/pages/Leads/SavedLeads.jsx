@@ -11,7 +11,10 @@ import {
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+    useNavigate,
+    useOutletContext,
+} from "react-router-dom";
 import toast from "react-hot-toast";
 
 import {
@@ -23,6 +26,10 @@ import {
 function SavedLeads() {
 
     const navigate = useNavigate();
+
+    const { theme } = useOutletContext();
+
+    const isDark = theme === "dark";
 
     const [leads, setLeads] = useState([]);
 
@@ -136,9 +143,21 @@ function SavedLeads() {
 
                 <div>
 
-                    <div className="h-8 w-48 animate-pulse rounded bg-zinc-800" />
+                    <div
+                        className={`h-8 w-48 animate-pulse rounded ${
+                            isDark
+                                ? "bg-zinc-800"
+                                : "bg-zinc-200"
+                        }`}
+                    />
 
-                    <div className="mt-3 h-4 w-72 animate-pulse rounded bg-zinc-800" />
+                    <div
+                        className={`mt-3 h-4 w-72 animate-pulse rounded ${
+                            isDark
+                                ? "bg-zinc-800"
+                                : "bg-zinc-200"
+                        }`}
+                    />
 
                 </div>
 
@@ -151,7 +170,11 @@ function SavedLeads() {
 
                         <div
                             key={index}
-                            className="h-72 animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900"
+                            className={`h-72 animate-pulse rounded-2xl border ${
+                                isDark
+                                    ? "border-zinc-800 bg-zinc-900"
+                                    : "border-[#e2e2e2] bg-white"
+                            }`}
                         />
 
                     ))}
@@ -173,26 +196,54 @@ function SavedLeads() {
 
         return (
 
-            <section className="rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/60 p-12">
+            <section
+                className={`rounded-2xl border border-dashed p-12 transition-colors duration-200 ${
+                    isDark
+                        ? "border-zinc-800 bg-zinc-900/60"
+                        : "border-[#dcdcdc] bg-white"
+                }`}
+            >
 
                 <div className="mx-auto flex max-w-md flex-col items-center text-center">
 
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-violet-500/10">
+                    <div
+                        className={`flex h-16 w-16 items-center justify-center rounded-full ${
+                            isDark
+                                ? "bg-blue-500/10"
+                                : "bg-blue-50"
+                        }`}
+                    >
 
                         <Bookmark
                             size={28}
-                            className="text-violet-400"
+                            className={
+                                isDark
+                                    ? "text-blue-400"
+                                    : "text-blue-600"
+                            }
                         />
 
                     </div>
 
 
-                    <h2 className="mt-6 text-2xl font-semibold text-white">
+                    <h2
+                        className={`mt-6 text-2xl font-semibold ${
+                            isDark
+                                ? "text-white"
+                                : "text-zinc-900"
+                        }`}
+                    >
                         No Saved Leads
                     </h2>
 
 
-                    <p className="mt-3 text-sm leading-6 text-zinc-400">
+                    <p
+                        className={`mt-3 text-sm leading-6 ${
+                            isDark
+                                ? "text-zinc-400"
+                                : "text-zinc-500"
+                        }`}
+                    >
                         Save businesses from your search
                         results and they will appear here.
                     </p>
@@ -203,7 +254,11 @@ function SavedLeads() {
                         onClick={() =>
                             navigate("/app/search")
                         }
-                        className="mt-6 rounded-xl bg-violet-600 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-violet-500"
+                        className={`mt-6 rounded-xl px-5 py-3 text-sm font-medium transition-all duration-150 ${
+                            isDark
+                                ? "bg-white text-black hover:bg-zinc-200"
+                                : "bg-zinc-900 text-white hover:bg-zinc-800"
+                        }`}
                     >
                         Find Businesses
                     </button>
@@ -235,28 +290,62 @@ function SavedLeads() {
 
                         <Bookmark
                             size={24}
-                            className="text-violet-400"
+                            className={
+                                isDark
+                                    ? "text-blue-400"
+                                    : "text-blue-600"
+                            }
                         />
 
-                        <h1 className="text-2xl font-semibold text-white">
+                        <h1
+                            className={`text-2xl font-semibold ${
+                                isDark
+                                    ? "text-white"
+                                    : "text-zinc-900"
+                            }`}
+                        >
                             Saved Leads
                         </h1>
 
                     </div>
 
 
-                    <p className="mt-2 text-sm text-zinc-400">
+                    <p
+                        className={`mt-2 text-sm ${
+                            isDark
+                                ? "text-zinc-400"
+                                : "text-zinc-500"
+                        }`}
+                    >
                         Businesses you've saved for later.
                     </p>
 
                 </div>
 
 
-                <div className="rounded-xl border border-zinc-800 bg-zinc-900 px-4 py-2">
+                <div
+                    className={`rounded-xl border px-4 py-2 ${
+                        isDark
+                            ? "border-zinc-800 bg-zinc-900"
+                            : "border-[#dedede] bg-white"
+                    }`}
+                >
 
-                    <span className="text-sm text-zinc-400">
+                    <span
+                        className={`text-sm ${
+                            isDark
+                                ? "text-zinc-400"
+                                : "text-zinc-500"
+                        }`}
+                    >
 
-                        <span className="font-semibold text-white">
+                        <span
+                            className={`font-semibold ${
+                                isDark
+                                    ? "text-white"
+                                    : "text-zinc-900"
+                            }`}
+                        >
                             {leads.length}
                         </span>{" "}
 
@@ -279,18 +368,31 @@ function SavedLeads() {
 
                     <div
                         key={business.id}
-                        className="
+                        className={`
                             group
                             rounded-2xl
                             border
-                            border-zinc-800
-                            bg-zinc-900
                             p-6
                             transition-all
-                            duration-300
-                            hover:-translate-y-1
-                            hover:border-violet-500
-                        "
+                            duration-200
+                            hover:-translate-y-0.5
+                            ${
+                                isDark
+                                    ? `
+                                        border-zinc-800
+                                        bg-zinc-900
+                                        hover:border-zinc-700
+                                        hover:bg-zinc-[930]
+                                    `
+                                    : `
+                                        border-[#dedede]
+                                        bg-white
+                                        shadow-[0_2px_10px_rgba(0,0,0,0.03)]
+                                        hover:border-[#cfcfcf]
+                                        hover:shadow-[0_6px_20px_rgba(0,0,0,0.06)]
+                                    `
+                            }
+                        `}
                     >
 
                         {/* Header */}
@@ -301,19 +403,46 @@ function SavedLeads() {
 
                                 <div className="flex items-center gap-2">
 
-                                    <Building2
-                                        size={18}
-                                        className="shrink-0 text-violet-400"
-                                    />
+                                    <div
+                                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                                            isDark
+                                                ? "bg-blue-500/10"
+                                                : "bg-blue-50"
+                                        }`}
+                                    >
 
-                                    <h2 className="truncate text-lg font-semibold text-white">
+                                        <Building2
+                                            size={17}
+                                            className={
+                                                isDark
+                                                    ? "text-blue-400"
+                                                    : "text-blue-600"
+                                            }
+                                        />
+
+                                    </div>
+
+
+                                    <h2
+                                        className={`truncate text-lg font-semibold ${
+                                            isDark
+                                                ? "text-white"
+                                                : "text-zinc-900"
+                                        }`}
+                                    >
                                         {business.business_name}
                                     </h2>
 
                                 </div>
 
 
-                                <p className="mt-2 inline-flex rounded-full bg-violet-500/10 px-3 py-1 text-xs font-medium text-violet-300">
+                                <p
+                                    className={`mt-3 inline-flex rounded-full px-3 py-1 text-xs font-medium ${
+                                        isDark
+                                            ? "bg-blue-500/10 text-blue-300"
+                                            : "bg-blue-50 text-blue-700"
+                                    }`}
+                                >
                                     {business.category ||
                                         "Unknown Category"}
                                 </p>
@@ -331,11 +460,17 @@ function SavedLeads() {
 
                             <div className="flex items-center justify-between">
 
-                                <div className="flex items-center gap-2 text-sm text-zinc-300">
+                                <div
+                                    className={`flex items-center gap-2 text-sm ${
+                                        isDark
+                                            ? "text-zinc-300"
+                                            : "text-zinc-700"
+                                    }`}
+                                >
 
                                     <Star
                                         size={16}
-                                        className="fill-yellow-400 text-yellow-400"
+                                        className="fill-amber-400 text-amber-400"
                                     />
 
                                     {business.google_rating ??
@@ -344,10 +479,21 @@ function SavedLeads() {
                                 </div>
 
 
-                                <div className="flex items-center gap-2 text-sm text-zinc-300">
+                                <div
+                                    className={`flex items-center gap-2 text-sm ${
+                                        isDark
+                                            ? "text-zinc-300"
+                                            : "text-zinc-600"
+                                    }`}
+                                >
 
                                     <MessageSquare
                                         size={16}
+                                        className={
+                                            isDark
+                                                ? "text-blue-400"
+                                                : "text-blue-600"
+                                        }
                                     />
 
                                     {business.review_count ??
@@ -361,11 +507,17 @@ function SavedLeads() {
 
                             {/* Address */}
 
-                            <div className="flex items-start gap-2 text-sm text-zinc-400">
+                            <div
+                                className={`flex items-start gap-2 text-sm ${
+                                    isDark
+                                        ? "text-zinc-400"
+                                        : "text-zinc-500"
+                                }`}
+                            >
 
                                 <MapPin
                                     size={16}
-                                    className="mt-0.5 shrink-0 text-violet-400"
+                                    className="mt-0.5 shrink-0 text-red-500"
                                 />
 
                                 <span className="line-clamp-2">
@@ -378,11 +530,17 @@ function SavedLeads() {
 
                             {/* Phone */}
 
-                            <div className="flex items-center gap-2 text-sm text-zinc-400">
+                            <div
+                                className={`flex items-center gap-2 text-sm ${
+                                    isDark
+                                        ? "text-zinc-400"
+                                        : "text-zinc-500"
+                                }`}
+                            >
 
                                 <Phone
                                     size={16}
-                                    className="text-violet-400"
+                                    className="text-emerald-500"
                                 />
 
                                 <span className="truncate">
@@ -403,28 +561,28 @@ function SavedLeads() {
                                 type="button"
                                 onClick={() =>
                                     navigate(
-                                        `/business/${business.id}`
+                                        `/app/business/${business.id}`
                                     )
                                 }
-                                className="
-                                    flex
-                                    items-center
-                                    justify-center
-                                    gap-2
-                                    rounded-xl
-                                    border
-                                    border-zinc-700
-                                    bg-zinc-800
-                                    px-4
-                                    py-3
-                                    text-sm
-                                    font-medium
-                                    text-zinc-200
-                                    transition-all
-                                    hover:border-violet-500
-                                    hover:bg-violet-500/10
-                                    hover:text-white
-                                "
+                                className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all duration-150 ${
+                                    isDark
+                                        ? `
+                                            border-zinc-700
+                                            bg-zinc-800
+                                            text-zinc-200
+                                            hover:border-zinc-600
+                                            hover:bg-zinc-700
+                                            hover:text-white
+                                        `
+                                        : `
+                                            border-[#dcdcdc]
+                                            bg-white
+                                            text-zinc-700
+                                            hover:border-zinc-300
+                                            hover:bg-zinc-50
+                                            hover:text-zinc-900
+                                        `
+                                }`}
                             >
 
                                 <Eye size={16} />
@@ -458,8 +616,10 @@ function SavedLeads() {
                                     py-3
                                     text-sm
                                     font-medium
-                                    text-red-400
+                                    text-red-500
                                     transition-all
+                                    duration-150
+                                    hover:border-red-500/30
                                     hover:bg-red-500/10
                                     disabled:cursor-wait
                                     disabled:opacity-50

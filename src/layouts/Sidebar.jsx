@@ -63,8 +63,14 @@ const accountNavigation = [
     },
 ];
 
-function SidebarItem({ item, collapsed }) {
+function SidebarItem({
+    item,
+    collapsed,
+    theme,
+}) {
     const Icon = item.icon;
+
+    const isDark = theme === "dark";
 
     return (
         <NavLink
@@ -87,8 +93,12 @@ function SidebarItem({ item, collapsed }) {
                 }
                 ${
                     isActive
-                        ? "bg-[#242424] text-white"
-                        : "text-[#a1a1a1] hover:bg-[#1c1c1c] hover:text-[#f5f5f5]"
+                        ? isDark
+                            ? "bg-[#242424] text-white"
+                            : "bg-[#eeeeef] text-[#111111]"
+                        : isDark
+                            ? "text-[#a1a1a1] hover:bg-[#1c1c1c] hover:text-[#f5f5f5]"
+                            : "text-[#666] hover:bg-[#eeeeef] hover:text-[#111111]"
                 }
                 `
             }
@@ -104,8 +114,12 @@ function SidebarItem({ item, collapsed }) {
                             duration-150
                             ${
                                 isActive
-                                    ? "text-white"
-                                    : "text-[#9a9a9a] group-hover:text-[#e5e5e5]"
+                                    ? isDark
+                                        ? "text-white"
+                                        : "text-[#111111]"
+                                    : isDark
+                                        ? "text-[#9a9a9a] group-hover:text-[#e5e5e5]"
+                                        : "text-[#888] group-hover:text-[#222]"
                             }
                         `}
                     />
@@ -125,13 +139,21 @@ function SidebarSection({
     title,
     items,
     collapsed,
+    theme,
 }) {
+    const isDark = theme === "dark";
+
     return (
         <div className="mb-7">
-
             {!collapsed && (
                 <div className="mb-2 px-3">
-                    <span className="text-[12px] font-medium tracking-[-0.01em] text-[#777]">
+                    <span
+                        className={`text-[12px] font-medium tracking-[-0.01em] ${
+                            isDark
+                                ? "text-[#777]"
+                                : "text-[#999]"
+                        }`}
+                    >
                         {title}
                     </span>
                 </div>
@@ -143,10 +165,10 @@ function SidebarSection({
                         key={item.path}
                         item={item}
                         collapsed={collapsed}
+                        theme={theme}
                     />
                 ))}
             </div>
-
         </div>
     );
 }
@@ -154,7 +176,10 @@ function SidebarSection({
 function Sidebar({
     collapsed,
     setCollapsed,
+    theme,
 }) {
+    const isDark = theme === "dark";
+
     return (
         <aside
             className={`
@@ -164,11 +189,14 @@ function Sidebar({
                 shrink-0
                 flex-col
                 border-r
-                border-[#202020]
-                bg-[#000000]
-                transition-[width]
+                transition-[width,background-color,border-color]
                 duration-200
                 ease-out
+                ${
+                    isDark
+                        ? "border-[#202020] bg-[#000000]"
+                        : "border-[#e5e5e5] bg-[#ffffff]"
+                }
                 ${
                     collapsed
                         ? "w-[72px]"
@@ -176,7 +204,6 @@ function Sidebar({
                 }
             `}
         >
-
             {/* ------------------------------------------------ */}
             {/* Header */}
             {/* ------------------------------------------------ */}
@@ -194,11 +221,12 @@ function Sidebar({
                     }
                 `}
             >
+                {/* Expanded Logo */}
 
                 {!collapsed && (
                     <NavLink
                         to="/app/dashboard"
-                        className="
+                        className={`
                             flex
                             items-center
                             gap-2.5
@@ -207,16 +235,18 @@ function Sidebar({
                             py-1.5
                             transition-colors
                             duration-150
-                            hover:bg-[#161616]
-                        "
+                            ${
+                                isDark
+                                    ? "hover:bg-[#161616]"
+                                    : "hover:bg-[#f2f2f2]"
+                            }
+                        `}
                     >
-
                         {/* LeadFlow mark */}
 
                         <div className="relative flex h-7 w-7 items-center justify-center">
-
                             <div
-                                className="
+                                className={`
                                     absolute
                                     left-[3px]
                                     top-[2px]
@@ -224,12 +254,16 @@ function Sidebar({
                                     w-[9px]
                                     -skew-x-[28deg]
                                     rounded-[2px]
-                                    bg-white
-                                "
+                                    ${
+                                        isDark
+                                            ? "bg-white"
+                                            : "bg-[#111111]"
+                                    }
+                                `}
                             />
 
                             <div
-                                className="
+                                className={`
                                     absolute
                                     bottom-[2px]
                                     right-[3px]
@@ -237,12 +271,16 @@ function Sidebar({
                                     w-[9px]
                                     -skew-x-[28deg]
                                     rounded-[2px]
-                                    bg-white
-                                "
+                                    ${
+                                        isDark
+                                            ? "bg-white"
+                                            : "bg-[#111111]"
+                                    }
+                                `}
                             />
 
                             <div
-                                className="
+                                className={`
                                     absolute
                                     left-[11px]
                                     top-[10px]
@@ -250,40 +288,38 @@ function Sidebar({
                                     w-[5px]
                                     -skew-x-[28deg]
                                     rounded-[1px]
-                                    bg-black
-                                "
+                                    ${
+                                        isDark
+                                            ? "bg-black"
+                                            : "bg-white"
+                                    }
+                                `}
                             />
-
                         </div>
 
                         <span
-                            className="
+                            className={`
                                 text-[17px]
                                 font-semibold
                                 tracking-[-0.04em]
-                                text-white
-                            "
+                                ${
+                                    isDark
+                                        ? "text-white"
+                                        : "text-[#111111]"
+                                }
+                            `}
                         >
                             LeadFlow
                         </span>
-
                     </NavLink>
                 )}
 
-                {collapsed && (
-                    <div
-                        className="
-                            relative
-                            flex
-                            h-8
-                            w-8
-                            items-center
-                            justify-center
-                        "
-                    >
+                {/* Collapsed Logo */}
 
+                {collapsed && (
+                    <div className="relative flex h-8 w-8 items-center justify-center">
                         <div
-                            className="
+                            className={`
                                 absolute
                                 left-[3px]
                                 top-[2px]
@@ -291,12 +327,16 @@ function Sidebar({
                                 w-[10px]
                                 -skew-x-[28deg]
                                 rounded-[2px]
-                                bg-white
-                            "
+                                ${
+                                    isDark
+                                        ? "bg-white"
+                                        : "bg-[#111111]"
+                                }
+                            `}
                         />
 
                         <div
-                            className="
+                            className={`
                                 absolute
                                 bottom-[2px]
                                 right-[3px]
@@ -304,12 +344,16 @@ function Sidebar({
                                 w-[10px]
                                 -skew-x-[28deg]
                                 rounded-[2px]
-                                bg-white
-                            "
+                                ${
+                                    isDark
+                                        ? "bg-white"
+                                        : "bg-[#111111]"
+                                }
+                            `}
                         />
 
                         <div
-                            className="
+                            className={`
                                 absolute
                                 left-[12px]
                                 top-[11px]
@@ -317,32 +361,39 @@ function Sidebar({
                                 w-[5px]
                                 -skew-x-[28deg]
                                 rounded-[1px]
-                                bg-black
-                            "
+                                ${
+                                    isDark
+                                        ? "bg-black"
+                                        : "bg-white"
+                                }
+                            `}
                         />
-
                     </div>
                 )}
+
+                {/* Collapse */}
 
                 {!collapsed && (
                     <button
                         type="button"
                         onClick={() => setCollapsed(true)}
                         title="Collapse sidebar"
-                        className="
+                        className={`
                             flex
                             h-8
                             w-8
                             items-center
                             justify-center
                             rounded-lg
-                            text-[#777]
                             transition-all
                             duration-150
-                            hover:bg-[#1b1b1b]
-                            hover:text-white
                             active:scale-95
-                        "
+                            ${
+                                isDark
+                                    ? "text-[#777] hover:bg-[#1b1b1b] hover:text-white"
+                                    : "text-[#888] hover:bg-[#eeeeee] hover:text-[#111]"
+                            }
+                        `}
                     >
                         <PanelLeftClose
                             size={18}
@@ -350,7 +401,6 @@ function Sidebar({
                         />
                     </button>
                 )}
-
             </div>
 
             {/* ------------------------------------------------ */}
@@ -362,7 +412,7 @@ function Sidebar({
                     type="button"
                     onClick={() => setCollapsed(false)}
                     title="Expand sidebar"
-                    className="
+                    className={`
                         absolute
                         -right-3
                         top-[19px]
@@ -374,17 +424,16 @@ function Sidebar({
                         justify-center
                         rounded-full
                         border
-                        border-[#303030]
-                        bg-[#111111]
-                        text-[#888]
                         shadow-xl
                         transition-all
                         duration-150
-                        hover:border-[#444]
-                        hover:bg-[#1d1d1d]
-                        hover:text-white
                         active:scale-95
-                    "
+                        ${
+                            isDark
+                                ? "border-[#303030] bg-[#111111] text-[#888] hover:border-[#444] hover:bg-[#1d1d1d] hover:text-white"
+                                : "border-[#d9d9d9] bg-white text-[#777] hover:border-[#c8c8c8] hover:bg-[#f5f5f5] hover:text-[#111]"
+                        }
+                    `}
                 >
                     <PanelLeftOpen
                         size={14}
@@ -398,35 +447,40 @@ function Sidebar({
             {/* ------------------------------------------------ */}
 
             <nav
-                className="
+                className={`
                     flex-1
                     overflow-y-auto
                     px-3
                     pb-4
                     scrollbar-thin
                     scrollbar-track-transparent
-                    scrollbar-thumb-[#292929]
-                "
+                    ${
+                        isDark
+                            ? "scrollbar-thumb-[#292929]"
+                            : "scrollbar-thumb-[#d5d5d5]"
+                    }
+                `}
             >
-
                 <SidebarSection
                     title="Workspace"
                     items={workspaceNavigation}
                     collapsed={collapsed}
+                    theme={theme}
                 />
 
                 <SidebarSection
                     title="Manage"
                     items={manageNavigation}
                     collapsed={collapsed}
+                    theme={theme}
                 />
 
                 <SidebarSection
                     title="Account"
                     items={accountNavigation}
                     collapsed={collapsed}
+                    theme={theme}
                 />
-
             </nav>
 
             {/* ------------------------------------------------ */}
@@ -434,14 +488,17 @@ function Sidebar({
             {/* ------------------------------------------------ */}
 
             <div
-                className="
+                className={`
                     shrink-0
                     border-t
-                    border-[#202020]
                     p-3
-                "
+                    ${
+                        isDark
+                            ? "border-[#202020]"
+                            : "border-[#e5e5e5]"
+                    }
+                `}
             >
-
                 <div
                     className={`
                         flex
@@ -449,15 +506,18 @@ function Sidebar({
                         rounded-[9px]
                         transition-colors
                         duration-150
-                        hover:bg-[#151515]
                         ${
                             collapsed
                                 ? "justify-center p-1"
                                 : "gap-3 px-2 py-2"
                         }
+                        ${
+                            isDark
+                                ? "hover:bg-[#151515]"
+                                : "hover:bg-[#f3f3f3]"
+                        }
                     `}
                 >
-
                     <UserButton
                         appearance={{
                             elements: {
@@ -468,36 +528,39 @@ function Sidebar({
 
                     {!collapsed && (
                         <div className="min-w-0">
-
                             <p
-                                className="
+                                className={`
                                     truncate
                                     text-[13px]
                                     font-medium
                                     tracking-[-0.01em]
-                                    text-[#e5e5e5]
-                                "
+                                    ${
+                                        isDark
+                                            ? "text-[#e5e5e5]"
+                                            : "text-[#222]"
+                                    }
+                                `}
                             >
                                 Account
                             </p>
 
                             <p
-                                className="
+                                className={`
                                     truncate
                                     text-[11px]
-                                    text-[#666]
-                                "
+                                    ${
+                                        isDark
+                                            ? "text-[#666]"
+                                            : "text-[#999]"
+                                    }
+                                `}
                             >
                                 Manage account
                             </p>
-
                         </div>
                     )}
-
                 </div>
-
             </div>
-
         </aside>
     );
 }
