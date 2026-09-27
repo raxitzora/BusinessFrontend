@@ -58,10 +58,10 @@ function SavedLeads() {
     const isDark =
         theme === "dark";
 
-    const [
-        removingId,
-        setRemovingId,
-    ] = useState(null);
+   const [
+    removingIds,
+    setRemovingIds,
+] = useState(new Set());
 
 
     /*
@@ -129,9 +129,11 @@ function SavedLeads() {
             onMutate:
                 async (businessId) => {
 
-                    setRemovingId(
-                        businessId
-                    );
+                setRemovingIds((current) => {
+    const next = new Set(current);
+    next.add(businessId);
+    return next;
+});
 
 
                     /*
@@ -204,16 +206,6 @@ function SavedLeads() {
                 },
 
 
-            onSuccess:
-                () => {
-
-                    toast.success(
-                        "Lead removed from saved leads."
-                    );
-
-                },
-
-
             onError:
                 (
                     error,
@@ -252,28 +244,19 @@ function SavedLeads() {
                 },
 
 
-            onSettled:
-                () => {
+      onSettled: (_data, _error, businessId) => {
 
-                    setRemovingId(
-                        null
-                    );
+    setRemovingIds((current) => {
+        const next = new Set(current);
+        next.delete(businessId);
+        return next;
+    });
 
+    queryClient.invalidateQueries({
+        queryKey: savedLeadsQueryKey,
+    });
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Refetch only this user's saved leads.
-                    |--------------------------------------------------------------------------
-                    */
-
-                    queryClient.invalidateQueries({
-
-                        queryKey:
-                            savedLeadsQueryKey,
-
-                    });
-
-                },
+},
 
         });
 
@@ -282,23 +265,15 @@ function SavedLeads() {
        REMOVE HANDLER
     ========================================================= */
 
-    const handleRemove =
-        (businessId) => {
+const handleRemove = (businessId) => {
+    if (removingIds.has(businessId)) {
+        return;
+    }
 
-            if (
-                removeLeadMutation.isPending
-            ) {
+    toast.success("Lead removed from saved leads.");
 
-                return;
-
-            }
-
-
-            removeLeadMutation.mutate(
-                businessId
-            );
-
-        };
+    removeLeadMutation.mutate(businessId);
+};
 
 
     /* =========================================================
@@ -1388,10 +1363,11 @@ function SavedLeads() {
 
                                         <button
                                             type="button"
-                                            disabled={
-                                                removingId ===
-                                                business.id
-                                            }
+                                        disabled={
+    removingIds.has(
+        business.id
+    )
+}
                                             onClick={() =>
                                                 handleRemove(
                                                     business.id
@@ -1420,8 +1396,9 @@ function SavedLeads() {
                                             `}
                                         >
 
-                                            {removingId ===
-                                            business.id ? (
+                                        {removingIds.has(
+    business.id
+) ? (
 
                                                 <>
 

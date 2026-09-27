@@ -67,50 +67,519 @@ function SearchResults({
     |--------------------------------------------------------------------------
     */
 
-    if (loading) {
-        return (
-            <section className="space-y-6">
+  if (loading) {
+    const generatingCards = [
+        {
+            title: "Discovering businesses",
+            subtitle: "Finding local opportunities",
+            delay: "0s",
+        },
+        {
+            title: "Analyzing businesses",
+            subtitle: "Checking business signals",
+            delay: "1.2s",
+        },
+        {
+            title: "Building your leads",
+            subtitle: "Collecting business details",
+            delay: "2.4s",
+        },
+        {
+            title: "Finding opportunities",
+            subtitle: "Looking for potential leads",
+            delay: "3.6s",
+        },
+        {
+            title: "Scanning the market",
+            subtitle: "Discovering more businesses",
+            delay: "4.8s",
+        },
+        {
+            title: "Preparing results",
+            subtitle: "Almost ready",
+            delay: "6s",
+        },
+    ];
 
-                <SearchProgress
-                    keyword={keyword}
-                    location={location}
-                    stage={searchStage}
-                    theme={theme}
-                />
+    return (
+        <section className="space-y-6">
 
-                <div
-                    className="
-                        grid
-                        gap-4
-                        md:grid-cols-2
-                        xl:grid-cols-3
-                    "
-                >
-                    {Array.from({
-                        length: 6,
-                    }).map((_, index) => (
+            <SearchProgress
+                keyword={keyword}
+                location={location}
+                stage={searchStage}
+                theme={theme}
+            />
+
+            <div
+                className="
+                    grid
+                    gap-4
+                    md:grid-cols-2
+                    xl:grid-cols-3
+                "
+            >
+
+                {generatingCards.map((card, index) => (
+                    <div
+                        key={index}
+                        className={`
+                            relative
+                            h-56
+                            overflow-hidden
+                            rounded-[10px]
+                            border
+                            ${
+                                isDark
+                                    ? "border-[#242424] bg-[#0d0d0d]"
+                                    : "border-[#e2e2e2] bg-white"
+                            }
+                        `}
+                    >
+
+                        {/* ------------------------------------------------ */}
+                        {/* Subtle grid inside card */}
+                        {/* ------------------------------------------------ */}
+
                         <div
-                            key={index}
                             className={`
-                                h-56
-                                animate-pulse
-                                rounded-[10px]
-                                border
-                                transition-colors
-                                duration-200
+                                pointer-events-none
+                                absolute
+                                inset-0
+                                opacity-40
                                 ${
                                     isDark
-                                        ? "border-[#242424] bg-[#111111]"
-                                        : "border-[#e2e2e2] bg-white"
+                                        ? "bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)]"
+                                        : "bg-[linear-gradient(rgba(0,0,0,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.025)_1px,transparent_1px)]"
                                 }
+                                bg-[size:24px_24px]
                             `}
                         />
-                    ))}
-                </div>
 
-            </section>
-        );
+                        {/* ------------------------------------------------ */}
+                        {/* Drawing area */}
+                        {/* ------------------------------------------------ */}
+
+                        <div className="absolute inset-0">
+                            <div
+    className={`
+        pointer-events-none
+        absolute
+        left-1/2
+        top-1/2
+        h-24
+        w-24
+        -translate-x-1/2
+        -translate-y-1/2
+        rounded-full
+        blur-3xl
+        animate-pulse
+        ${
+            index % 3 === 0
+                ? "bg-cyan-400/10"
+                : index % 3 === 1
+                    ? "bg-violet-400/10"
+                    : "bg-pink-400/10"
+        }
+    `}
+/>
+
+                            {/* Cursor */}
+                            <div
+                                className="
+                                    absolute
+                                    z-20
+                                    animate-[cardCursor_4.8s_ease-in-out_infinite]
+                                "
+                                style={{
+                                    animationDelay: card.delay,
+                                }}
+                            >
+
+                                <svg
+                                    width="30"
+                                    height="34"
+                                    viewBox="0 0 30 34"
+                                    fill="none"
+                                >
+                                    <path
+                                        d="M3 2L26 23L16.5 23.5L22 32L17 34L11.5 25L5 31L3 2Z"
+                                      className={
+    isDark
+        ? "fill-cyan-300 stroke-[#061014]"
+        : "fill-cyan-600 stroke-white"
+}
+                                        strokeWidth="1.5"
+                                    />
+                                </svg>
+
+                                {/* click pulse */}
+                                <span
+                                  className={`
+    absolute
+    -left-2
+    -top-2
+    h-4
+    w-4
+    rounded-full
+    border
+    animate-[cardClick_4.8s_ease-in-out_infinite]
+    ${
+        isDark
+            ? "border-cyan-300/60"
+            : "border-cyan-500/40"
     }
+`}
+                                />
+
+                            </div>
+
+
+                            {/* Cursor trail */}
+
+                            <div
+                                className={`
+                                    absolute
+                                    h-px
+                                    w-20
+                                    origin-left
+                                    animate-[cardTrail_4.8s_ease-in-out_infinite]
+                                  ${
+    isDark
+        ? "bg-gradient-to-r from-transparent via-cyan-300/70 to-violet-400/60"
+        : "bg-gradient-to-r from-transparent via-cyan-500/50 to-violet-500/40"
+}
+                                `}
+                                style={{
+                                    animationDelay: card.delay,
+                                }}
+                            />
+
+
+                            {/* ------------------------------------------------ */}
+                            {/* Card being drawn */}
+                            {/* ------------------------------------------------ */}
+
+                            <div
+                                className="
+                                    absolute
+                                    left-5
+                                    right-5
+                                    top-5
+                                    bottom-5
+                                    animate-[cardBuild_4.8s_ease-in-out_infinite]
+                                "
+                                style={{
+                                    animationDelay: card.delay,
+                                }}
+                            >
+
+                                {/* logo */}
+                              <div
+    className={`
+        h-9
+        w-9
+        rounded-lg
+        border
+        shadow-[0_0_18px_rgba(34,211,238,0.12)]
+        ${
+            isDark
+                ? "border-cyan-400/30 bg-cyan-400/10"
+                : "border-cyan-500/20 bg-cyan-50"
+        }
+    `}
+/>
+
+                                {/* business name */}
+                                <div
+                                    className={`
+                                        mt-4
+                                        h-2
+                                        w-3/4
+                                        rounded-full
+                                       ${
+    isDark
+        ? "bg-gradient-to-r from-cyan-400/70 via-violet-400/60 to-[#303030]"
+        : "bg-gradient-to-r from-cyan-500/50 via-violet-500/40 to-[#dedede]"
+}
+                                    `}
+                                />
+
+                                {/* second line */}
+                                <div
+                                    className={`
+                                        mt-2
+                                        h-1.5
+                                        w-1/2
+                                        rounded-full
+                                        ${
+                                            isDark
+                                                ? "bg-[#242424]"
+                                                : "bg-[#e8e8e8]"
+                                        }
+                                    `}
+                                />
+
+                                {/* location */}
+                                <div
+                                    className={`
+                                        mt-6
+                                        h-1.5
+                                        w-2/3
+                                        rounded-full
+                                        ${
+                                            isDark
+                                                ? "bg-[#202020]"
+                                                : "bg-[#ededed]"
+                                        }
+                                    `}
+                                />
+
+                                {/* rating */}
+                                <div className="mt-5 flex gap-1">
+                                    {[1, 2, 3, 4, 5].map(
+                                        (star) => (
+                                            <span
+                                                key={star}
+                                               className={`
+    h-1.5
+    w-1.5
+    rounded-full
+    ${
+        star <= 3
+            ? isDark
+                ? "bg-amber-300/70"
+                : "bg-amber-500/60"
+            : isDark
+                ? "bg-[#303030]"
+                : "bg-[#dedede]"
+    }
+`}
+                                            />
+                                        )
+                                    )}
+                                </div>
+
+                                {/* bottom status */}
+                                <div
+                                    className={`
+                                        absolute
+                                        bottom-0
+                                        left-0
+                                        text-[9px]
+                                        ${
+                                            isDark
+                                                ? "text-[#555]"
+                                                : "text-[#aaa]"
+                                        }
+                                    `}
+                                >
+                                    {card.title}
+                                </div>
+
+                            </div>
+
+
+                            {/* Drawing line */}
+
+                            <div
+                                className={`
+                                    absolute
+                                    left-5
+                                    right-5
+                                    top-5
+                                    h-px
+                                    animate-[drawLine_4.8s_ease-in-out_infinite]
+                                 ${
+    isDark
+        ? "bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-400"
+        : "bg-gradient-to-r from-cyan-500/60 via-violet-500/50 to-pink-500/40"
+}
+                                `}
+                                style={{
+                                    animationDelay: card.delay,
+                                }}
+                            />
+
+                        </div>
+
+
+                        {/* ------------------------------------------------ */}
+                        {/* Bottom message */}
+                        {/* ------------------------------------------------ */}
+
+                        <div
+                            className={`
+                                absolute
+                                bottom-3
+                                left-4
+                                right-4
+                                text-[9px]
+                                ${
+                                    isDark
+                                        ? "text-[#555]"
+                                        : "text-[#999]"
+                                }
+                            `}
+                        >
+                            {card.subtitle}
+                        </div>
+
+
+                        {/* ------------------------------------------------ */}
+                        {/* Keyframes */}
+                        {/* ------------------------------------------------ */}
+
+                        <style>
+                            {`
+                                @keyframes cardCursor {
+                                    0% {
+                                        left: 75%;
+                                        top: 75%;
+                                        opacity: 0;
+                                    }
+
+                                    8% {
+                                        opacity: 1;
+                                    }
+
+                                    25% {
+                                        left: 18%;
+                                        top: 18%;
+                                    }
+
+                                    45% {
+                                        left: 72%;
+                                        top: 35%;
+                                    }
+
+                                    65% {
+                                        left: 28%;
+                                        top: 65%;
+                                    }
+
+                                    82% {
+                                        left: 70%;
+                                        top: 72%;
+                                    }
+
+                                    92% {
+                                        opacity: 1;
+                                    }
+
+                                    100% {
+                                        left: 75%;
+                                        top: 75%;
+                                        opacity: 0;
+                                    }
+                                }
+
+                                @keyframes cardTrail {
+                                    0% {
+                                        left: 70%;
+                                        top: 75%;
+                                        opacity: 0;
+                                        transform: rotate(0deg) scaleX(0);
+                                    }
+
+                                    15% {
+                                        opacity: 0.6;
+                                        transform: rotate(-20deg) scaleX(1);
+                                    }
+
+                                    35% {
+                                        left: 20%;
+                                        top: 25%;
+                                        opacity: 0;
+                                        transform: rotate(15deg) scaleX(0.3);
+                                    }
+
+                                    100% {
+                                        opacity: 0;
+                                    }
+                                }
+
+                                @keyframes cardClick {
+                                    0%,
+                                    15% {
+                                        transform: scale(0.4);
+                                        opacity: 0;
+                                    }
+
+                                    22% {
+                                        transform: scale(1);
+                                        opacity: 0.7;
+                                    }
+
+                                    32% {
+                                        transform: scale(2);
+                                        opacity: 0;
+                                    }
+
+                                    100% {
+                                        opacity: 0;
+                                    }
+                                }
+
+                                @keyframes cardBuild {
+                                    0%,
+                                    8% {
+                                        opacity: 0;
+                                        clip-path: inset(0 100% 0 0);
+                                        transform: translateX(-5px);
+                                    }
+
+                                    18% {
+                                        opacity: 1;
+                                        clip-path: inset(0 0 0 0);
+                                        transform: translateX(0);
+                                    }
+
+                                    35% {
+                                        opacity: 1;
+                                    }
+
+                                    55% {
+                                        opacity: 0.9;
+                                    }
+
+                                    70%,
+                                    100% {
+                                        opacity: 0;
+                                    }
+                                }
+
+                                @keyframes drawLine {
+                                    0% {
+                                        transform: scaleX(0);
+                                        transform-origin: left;
+                                        opacity: 0;
+                                    }
+
+                                    15% {
+                                        transform: scaleX(1);
+                                        opacity: 0.5;
+                                    }
+
+                                    35% {
+                                        opacity: 0;
+                                    }
+
+                                    100% {
+                                        opacity: 0;
+                                    }
+                                }
+                            `}
+                        </style>
+
+                    </div>
+                ))}
+
+            </div>
+
+        </section>
+    );
+}
 
     /*
     |--------------------------------------------------------------------------

@@ -12,6 +12,7 @@ import {
 
 import {
     Link,
+    useOutletContext,
 } from "react-router-dom";
 
 import toast from "react-hot-toast";
@@ -38,6 +39,13 @@ function Dashboard() {
         user,
         isLoaded,
     } = useUser();
+
+    const {
+        theme,
+    } = useOutletContext();
+
+    const isDark =
+        theme === "dark";
 
 
     /*
@@ -122,9 +130,6 @@ function Dashboard() {
     |--------------------------------------------------------------------------
     | Error Toast
     |--------------------------------------------------------------------------
-    |
-    | Never call toast during render.
-    |
     */
 
     useEffect(() => {
@@ -147,6 +152,7 @@ function Dashboard() {
     */
 
     if (loading) {
+
         return (
             <div className="space-y-8">
 
@@ -155,25 +161,33 @@ function Dashboard() {
                 <div>
 
                     <div
-                        className="
+                        className={`
                             h-8
                             w-72
                             animate-pulse
                             rounded-lg
-                            bg-[#1b1b1b]
-                        "
+                            ${
+                                isDark
+                                    ? "bg-[#1b1b1b]"
+                                    : "bg-zinc-200"
+                            }
+                        `}
                     />
 
                     <div
-                        className="
+                        className={`
                             mt-3
                             h-4
                             w-[420px]
                             max-w-full
                             animate-pulse
                             rounded
-                            bg-[#171717]
-                        "
+                            ${
+                                isDark
+                                    ? "bg-[#171717]"
+                                    : "bg-zinc-100"
+                            }
+                        `}
                     />
 
                 </div>
@@ -190,25 +204,31 @@ function Dashboard() {
                 >
 
                     <div
-                        className="
+                        className={`
                             h-[150px]
                             animate-pulse
                             rounded-[12px]
                             border
-                            border-[#242424]
-                            bg-[#0d0d0d]
-                        "
+                            ${
+                                isDark
+                                    ? "border-[#242424] bg-[#0d0d0d]"
+                                    : "border-zinc-200 bg-white"
+                            }
+                        `}
                     />
 
                     <div
-                        className="
+                        className={`
                             h-[150px]
                             animate-pulse
                             rounded-[12px]
                             border
-                            border-[#242424]
-                            bg-[#0d0d0d]
-                        "
+                            ${
+                                isDark
+                                    ? "border-[#242424] bg-[#0d0d0d]"
+                                    : "border-zinc-200 bg-white"
+                            }
+                        `}
                     />
 
                 </div>
@@ -217,18 +237,22 @@ function Dashboard() {
                 {/* Actions Skeleton */}
 
                 <div
-                    className="
+                    className={`
                         h-[150px]
                         animate-pulse
                         rounded-[12px]
                         border
-                        border-[#242424]
-                        bg-[#0d0d0d]
-                    "
+                        ${
+                            isDark
+                                ? "border-[#242424] bg-[#0d0d0d]"
+                                : "border-zinc-200 bg-white"
+                        }
+                    `}
                 />
 
             </div>
         );
+
     }
 
 
@@ -239,18 +263,34 @@ function Dashboard() {
     */
 
     return (
-        <div className="space-y-8">
+
+        <div
+            className={`
+                space-y-8
+                transition-colors
+                duration-200
+                ${
+                    isDark
+                        ? "text-white"
+                        : "text-zinc-900"
+                }
+            `}
+        >
 
             {/* ------------------------------------------------ */}
             {/* Header */}
             {/* ------------------------------------------------ */}
 
             <section
-                className="
+                className={`
                     border-b
-                    border-[#242424]
                     pb-7
-                "
+                    ${
+                        isDark
+                            ? "border-[#242424]"
+                            : "border-zinc-200"
+                    }
+                `}
             >
 
                 <div
@@ -273,7 +313,7 @@ function Dashboard() {
                         >
 
                             <div
-                                className="
+                                className={`
                                     flex
                                     h-9
                                     w-9
@@ -281,29 +321,40 @@ function Dashboard() {
                                     justify-center
                                     rounded-[9px]
                                     border
-                                    border-[#2b3542]
-                                    bg-[#111a25]
-                                "
+                                    ${
+                                        isDark
+                                            ? "border-[#2b3542] bg-[#111a25]"
+                                            : "border-blue-100 bg-blue-50"
+                                    }
+                                `}
                             >
 
                                 <Sparkles
                                     size={18}
                                     strokeWidth={1.8}
-                                    className="text-blue-400"
+                                    className={
+                                        isDark
+                                            ? "text-blue-400"
+                                            : "text-blue-600"
+                                    }
                                 />
 
                             </div>
 
 
                             <h1
-                                className="
+                                className={`
                                     text-[28px]
                                     font-semibold
                                     leading-tight
                                     tracking-[-0.035em]
-                                    text-white
                                     sm:text-[30px]
-                                "
+                                    ${
+                                        isDark
+                                            ? "text-white"
+                                            : "text-zinc-900"
+                                    }
+                                `}
                             >
                                 Welcome,{" "}
                                 {profile?.full_name} 👋
@@ -313,14 +364,18 @@ function Dashboard() {
 
 
                         <p
-                            className="
+                            className={`
                                 mt-3
                                 max-w-2xl
                                 text-[14px]
                                 leading-6
                                 tracking-[-0.01em]
-                                text-[#858585]
-                            "
+                                ${
+                                    isDark
+                                        ? "text-[#858585]"
+                                        : "text-zinc-500"
+                                }
+                            `}
                         >
                             Manage your services and start
                             generating new business leads.
@@ -348,20 +403,21 @@ function Dashboard() {
                 {/* Credits */}
 
                 <div
-                    className="
+                    className={`
                         group
                         relative
                         overflow-hidden
                         rounded-[12px]
                         border
-                        border-[#242424]
-                        bg-[#0d0d0d]
                         p-6
                         transition-colors
                         duration-200
-                        hover:border-[#303030]
-                        hover:bg-[#101010]
-                    "
+                        ${
+                            isDark
+                                ? "border-[#242424] bg-[#0d0d0d] hover:border-[#303030] hover:bg-[#101010]"
+                                : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50/50"
+                        }
+                    `}
                 >
 
                     <div
@@ -383,7 +439,7 @@ function Dashboard() {
                             >
 
                                 <div
-                                    className="
+                                    className={`
                                         flex
                                         h-8
                                         w-8
@@ -391,26 +447,37 @@ function Dashboard() {
                                         justify-center
                                         rounded-[8px]
                                         border
-                                        border-amber-500/15
-                                        bg-amber-500/[0.06]
-                                    "
+                                        ${
+                                            isDark
+                                                ? "border-amber-500/15 bg-amber-500/[0.06]"
+                                                : "border-amber-200 bg-amber-50"
+                                        }
+                                    `}
                                 >
 
                                     <Coins
                                         size={16}
                                         strokeWidth={1.8}
-                                        className="text-amber-400"
+                                        className={
+                                            isDark
+                                                ? "text-amber-400"
+                                                : "text-amber-600"
+                                        }
                                     />
 
                                 </div>
 
 
                                 <h2
-                                    className="
+                                    className={`
                                         text-[13px]
                                         font-medium
-                                        text-[#999]
-                                    "
+                                        ${
+                                            isDark
+                                                ? "text-[#999]"
+                                                : "text-zinc-500"
+                                        }
+                                    `}
                                 >
                                     Available Credits
                                 </h2>
@@ -419,25 +486,33 @@ function Dashboard() {
 
 
                             <p
-                                className="
+                                className={`
                                     mt-5
                                     text-[36px]
                                     font-semibold
                                     leading-none
                                     tracking-[-0.04em]
-                                    text-white
-                                "
+                                    ${
+                                        isDark
+                                            ? "text-white"
+                                            : "text-zinc-900"
+                                    }
+                                `}
                             >
                                 {profile?.credits ?? 0}
                             </p>
 
 
                             <p
-                                className="
+                                className={`
                                     mt-2
                                     text-[12px]
-                                    text-[#555]
-                                "
+                                    ${
+                                        isDark
+                                            ? "text-[#555]"
+                                            : "text-zinc-400"
+                                    }
+                                `}
                             >
                                 Credits available for lead generation
                             </p>
@@ -446,19 +521,21 @@ function Dashboard() {
 
 
                         <div
-                            className="
+                            className={`
                                 rounded-full
                                 border
-                                border-amber-500/15
-                                bg-amber-500/[0.05]
                                 px-2.5
                                 py-1
                                 text-[10px]
                                 font-medium
                                 uppercase
                                 tracking-[0.08em]
-                                text-amber-400
-                            "
+                                ${
+                                    isDark
+                                        ? "border-amber-500/15 bg-amber-500/[0.05] text-amber-400"
+                                        : "border-amber-200 bg-amber-50 text-amber-600"
+                                }
+                            `}
                         >
                             Balance
                         </div>
@@ -471,18 +548,19 @@ function Dashboard() {
                 {/* Services Count */}
 
                 <div
-                    className="
+                    className={`
                         group
                         rounded-[12px]
                         border
-                        border-[#242424]
-                        bg-[#0d0d0d]
                         p-6
                         transition-colors
                         duration-200
-                        hover:border-[#303030]
-                        hover:bg-[#101010]
-                    "
+                        ${
+                            isDark
+                                ? "border-[#242424] bg-[#0d0d0d] hover:border-[#303030] hover:bg-[#101010]"
+                                : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50/50"
+                        }
+                    `}
                 >
 
                     <div
@@ -504,7 +582,7 @@ function Dashboard() {
                             >
 
                                 <div
-                                    className="
+                                    className={`
                                         flex
                                         h-8
                                         w-8
@@ -512,26 +590,37 @@ function Dashboard() {
                                         justify-center
                                         rounded-[8px]
                                         border
-                                        border-blue-500/15
-                                        bg-blue-500/[0.06]
-                                    "
+                                        ${
+                                            isDark
+                                                ? "border-blue-500/15 bg-blue-500/[0.06]"
+                                                : "border-blue-100 bg-blue-50"
+                                        }
+                                    `}
                                 >
 
                                     <BriefcaseBusiness
                                         size={16}
                                         strokeWidth={1.8}
-                                        className="text-blue-400"
+                                        className={
+                                            isDark
+                                                ? "text-blue-400"
+                                                : "text-blue-600"
+                                        }
                                     />
 
                                 </div>
 
 
                                 <h2
-                                    className="
+                                    className={`
                                         text-[13px]
                                         font-medium
-                                        text-[#999]
-                                    "
+                                        ${
+                                            isDark
+                                                ? "text-[#999]"
+                                                : "text-zinc-500"
+                                        }
+                                    `}
                                 >
                                     Selected Services
                                 </h2>
@@ -540,25 +629,33 @@ function Dashboard() {
 
 
                             <p
-                                className="
+                                className={`
                                     mt-5
                                     text-[36px]
                                     font-semibold
                                     leading-none
                                     tracking-[-0.04em]
-                                    text-white
-                                "
+                                    ${
+                                        isDark
+                                            ? "text-white"
+                                            : "text-zinc-900"
+                                    }
+                                `}
                             >
                                 {services.length}
                             </p>
 
 
                             <p
-                                className="
+                                className={`
                                     mt-2
                                     text-[12px]
-                                    text-[#555]
-                                "
+                                    ${
+                                        isDark
+                                            ? "text-[#555]"
+                                            : "text-zinc-400"
+                                    }
+                                `}
                             >
                                 Services currently configured
                             </p>
@@ -567,19 +664,21 @@ function Dashboard() {
 
 
                         <div
-                            className="
+                            className={`
                                 rounded-full
                                 border
-                                border-blue-500/15
-                                bg-blue-500/[0.05]
                                 px-2.5
                                 py-1
                                 text-[10px]
                                 font-medium
                                 uppercase
                                 tracking-[0.08em]
-                                text-blue-400
-                            "
+                                ${
+                                    isDark
+                                        ? "border-blue-500/15 bg-blue-500/[0.05] text-blue-400"
+                                        : "border-blue-100 bg-blue-50 text-blue-600"
+                                }
+                            `}
                         >
                             Active
                         </div>
@@ -596,21 +695,28 @@ function Dashboard() {
             {/* ------------------------------------------------ */}
 
             <section
-                className="
+                className={`
                     rounded-[12px]
                     border
-                    border-[#242424]
-                    bg-[#0d0d0d]
-                "
+                    ${
+                        isDark
+                            ? "border-[#242424] bg-[#0d0d0d]"
+                            : "border-zinc-200 bg-white"
+                    }
+                `}
             >
 
                 <div
-                    className="
+                    className={`
                         border-b
-                        border-[#242424]
                         px-6
                         py-5
-                    "
+                        ${
+                            isDark
+                                ? "border-[#242424]"
+                                : "border-zinc-200"
+                        }
+                    `}
                 >
 
                     <div
@@ -635,16 +741,24 @@ function Dashboard() {
                                 <Settings2
                                     size={17}
                                     strokeWidth={1.8}
-                                    className="text-[#888]"
+                                    className={
+                                        isDark
+                                            ? "text-[#888]"
+                                            : "text-zinc-500"
+                                    }
                                 />
 
                                 <h2
-                                    className="
+                                    className={`
                                         text-[15px]
                                         font-semibold
                                         tracking-[-0.015em]
-                                        text-white
-                                    "
+                                        ${
+                                            isDark
+                                                ? "text-white"
+                                                : "text-zinc-900"
+                                        }
+                                    `}
                                 >
                                     Selected Services
                                 </h2>
@@ -653,11 +767,15 @@ function Dashboard() {
 
 
                             <p
-                                className="
+                                className={`
                                     mt-1.5
                                     text-[12px]
-                                    text-[#666]
-                                "
+                                    ${
+                                        isDark
+                                            ? "text-[#666]"
+                                            : "text-zinc-500"
+                                    }
+                                `}
                             >
                                 Services configured for your lead
                                 generation workflow.
@@ -667,21 +785,25 @@ function Dashboard() {
 
 
                         {services.length > 0 && (
+
                             <span
-                                className="
+                                className={`
                                     rounded-full
                                     border
-                                    border-[#2c2c2c]
-                                    bg-[#151515]
                                     px-2.5
                                     py-1
                                     text-[11px]
                                     font-medium
-                                    text-[#999]
-                                "
+                                    ${
+                                        isDark
+                                            ? "border-[#2c2c2c] bg-[#151515] text-[#999]"
+                                            : "border-zinc-200 bg-zinc-50 text-zinc-600"
+                                    }
+                                `}
                             >
                                 {services.length}
                             </span>
+
                         )}
 
                     </div>
@@ -694,7 +816,7 @@ function Dashboard() {
                     {services.length === 0 ? (
 
                         <div
-                            className="
+                            className={`
                                 flex
                                 flex-col
                                 items-center
@@ -702,16 +824,19 @@ function Dashboard() {
                                 rounded-[9px]
                                 border
                                 border-dashed
-                                border-[#292929]
-                                bg-[#101010]
                                 px-6
                                 py-10
                                 text-center
-                            "
+                                ${
+                                    isDark
+                                        ? "border-[#292929] bg-[#101010]"
+                                        : "border-zinc-300 bg-zinc-50"
+                                }
+                            `}
                         >
 
                             <div
-                                className="
+                                className={`
                                     flex
                                     h-10
                                     w-10
@@ -719,40 +844,55 @@ function Dashboard() {
                                     justify-center
                                     rounded-[9px]
                                     border
-                                    border-[#2b2b2b]
-                                    bg-[#171717]
-                                "
+                                    ${
+                                        isDark
+                                            ? "border-[#2b2b2b] bg-[#171717]"
+                                            : "border-zinc-200 bg-white"
+                                    }
+                                `}
                             >
 
                                 <BriefcaseBusiness
                                     size={17}
                                     strokeWidth={1.7}
-                                    className="text-[#777]"
+                                    className={
+                                        isDark
+                                            ? "text-[#777]"
+                                            : "text-zinc-400"
+                                    }
                                 />
 
                             </div>
 
 
                             <p
-                                className="
+                                className={`
                                     mt-4
                                     text-[13px]
                                     font-medium
-                                    text-[#bbb]
-                                "
+                                    ${
+                                        isDark
+                                            ? "text-[#bbb]"
+                                            : "text-zinc-700"
+                                    }
+                                `}
                             >
                                 No services selected
                             </p>
 
 
                             <p
-                                className="
+                                className={`
                                     mt-1
                                     max-w-sm
                                     text-[12px]
                                     leading-5
-                                    text-[#555]
-                                "
+                                    ${
+                                        isDark
+                                            ? "text-[#555]"
+                                            : "text-zinc-500"
+                                    }
+                                `}
                             >
                                 Configure your services to help
                                 tailor your lead generation workflow.
@@ -761,7 +901,7 @@ function Dashboard() {
 
                             <Link
                                 to="/app/services"
-                                className="
+                                className={`
                                     mt-5
                                     inline-flex
                                     h-9
@@ -769,19 +909,18 @@ function Dashboard() {
                                     gap-2
                                     rounded-[8px]
                                     border
-                                    border-[#303030]
-                                    bg-[#181818]
                                     px-3.5
                                     text-[12px]
                                     font-medium
-                                    text-[#c0c0c0]
                                     transition-all
                                     duration-150
-                                    hover:border-[#444]
-                                    hover:bg-[#202020]
-                                    hover:text-white
                                     active:scale-[0.98]
-                                "
+                                    ${
+                                        isDark
+                                            ? "border-[#303030] bg-[#181818] text-[#c0c0c0] hover:border-[#444] hover:bg-[#202020] hover:text-white"
+                                            : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-900"
+                                    }
+                                `}
                             >
 
                                 <Settings2
@@ -803,26 +942,27 @@ function Dashboard() {
 
                                 <div
                                     key={service.id}
-                                    className="
+                                    className={`
                                         group
                                         flex
                                         items-center
                                         gap-2
                                         rounded-[8px]
                                         border
-                                        border-[#2a2a2a]
-                                        bg-[#151515]
                                         px-3
                                         py-2
                                         transition-colors
                                         duration-150
-                                        hover:border-[#383838]
-                                        hover:bg-[#191919]
-                                    "
+                                        ${
+                                            isDark
+                                                ? "border-[#2a2a2a] bg-[#151515] hover:border-[#383838] hover:bg-[#191919]"
+                                                : "border-zinc-200 bg-zinc-50 hover:border-zinc-300 hover:bg-zinc-100"
+                                        }
+                                    `}
                                 >
 
                                     <div
-                                        className="
+                                        className={`
                                             flex
                                             h-5
                                             w-5
@@ -830,27 +970,37 @@ function Dashboard() {
                                             justify-center
                                             rounded-full
                                             border
-                                            border-emerald-500/15
-                                            bg-emerald-500/[0.06]
-                                        "
+                                            ${
+                                                isDark
+                                                    ? "border-emerald-500/15 bg-emerald-500/[0.06]"
+                                                    : "border-emerald-200 bg-emerald-50"
+                                            }
+                                        `}
                                     >
 
                                         <Check
                                             size={11}
                                             strokeWidth={2}
-                                            className="text-emerald-400"
+                                            className={
+                                                isDark
+                                                    ? "text-emerald-400"
+                                                    : "text-emerald-600"
+                                            }
                                         />
 
                                     </div>
 
 
                                     <span
-                                        className="
+                                        className={`
                                             text-[12px]
                                             font-medium
-                                            text-[#c5c5c5]
-                                            group-hover:text-white
-                                        "
+                                            ${
+                                                isDark
+                                                    ? "text-[#c5c5c5] group-hover:text-white"
+                                                    : "text-zinc-700 group-hover:text-zinc-900"
+                                            }
+                                        `}
                                     >
                                         {service.name}
                                     </span>
@@ -877,23 +1027,31 @@ function Dashboard() {
                 <div className="mb-4">
 
                     <h2
-                        className="
+                        className={`
                             text-[15px]
                             font-semibold
                             tracking-[-0.015em]
-                            text-white
-                        "
+                            ${
+                                isDark
+                                    ? "text-white"
+                                    : "text-zinc-900"
+                            }
+                        `}
                     >
                         Quick Actions
                     </h2>
 
 
                     <p
-                        className="
+                        className={`
                             mt-1.5
                             text-[12px]
-                            text-[#666]
-                        "
+                            ${
+                                isDark
+                                    ? "text-[#666]"
+                                    : "text-zinc-500"
+                            }
+                        `}
                     >
                         Jump directly into your lead generation workflow.
                     </p>
@@ -913,22 +1071,23 @@ function Dashboard() {
 
                     <Link
                         to="/app/search"
-                        className="
+                        className={`
                             group
                             flex
                             items-center
                             justify-between
                             rounded-[10px]
                             border
-                            border-[#292929]
-                            bg-[#111111]
                             p-4
                             transition-all
                             duration-200
-                            hover:border-[#3b4655]
-                            hover:bg-[#15191e]
                             active:scale-[0.99]
-                        "
+                            ${
+                                isDark
+                                    ? "border-[#292929] bg-[#111111] hover:border-[#3b4655] hover:bg-[#15191e]"
+                                    : "border-zinc-200 bg-white hover:border-blue-200 hover:bg-blue-50/30"
+                            }
+                        `}
                     >
 
                         <div
@@ -940,7 +1099,7 @@ function Dashboard() {
                         >
 
                             <div
-                                className="
+                                className={`
                                     flex
                                     h-10
                                     w-10
@@ -948,18 +1107,25 @@ function Dashboard() {
                                     justify-center
                                     rounded-[9px]
                                     border
-                                    border-blue-500/15
-                                    bg-blue-500/[0.06]
                                     transition-transform
                                     duration-200
                                     group-hover:scale-105
-                                "
+                                    ${
+                                        isDark
+                                            ? "border-blue-500/15 bg-blue-500/[0.06]"
+                                            : "border-blue-100 bg-blue-50"
+                                    }
+                                `}
                             >
 
                                 <Search
                                     size={17}
                                     strokeWidth={1.8}
-                                    className="text-blue-400"
+                                    className={
+                                        isDark
+                                            ? "text-blue-400"
+                                            : "text-blue-600"
+                                    }
                                 />
 
                             </div>
@@ -968,22 +1134,30 @@ function Dashboard() {
                             <div>
 
                                 <p
-                                    className="
+                                    className={`
                                         text-[13px]
                                         font-medium
-                                        text-white
-                                    "
+                                        ${
+                                            isDark
+                                                ? "text-white"
+                                                : "text-zinc-900"
+                                        }
+                                    `}
                                 >
                                     Search Businesses
                                 </p>
 
 
                                 <p
-                                    className="
+                                    className={`
                                         mt-1
                                         text-[11px]
-                                        text-[#5f5f5f]
-                                    "
+                                        ${
+                                            isDark
+                                                ? "text-[#5f5f5f]"
+                                                : "text-zinc-500"
+                                        }
+                                    `}
                                 >
                                     Discover new potential clients
                                 </p>
@@ -996,13 +1170,16 @@ function Dashboard() {
                         <ArrowRight
                             size={16}
                             strokeWidth={1.8}
-                            className="
-                                text-[#555]
+                            className={`
                                 transition-all
                                 duration-200
+                                ${
+                                    isDark
+                                        ? "text-[#555] group-hover:text-blue-400"
+                                        : "text-zinc-400 group-hover:text-blue-600"
+                                }
                                 group-hover:translate-x-0.5
-                                group-hover:text-blue-400
-                            "
+                            `}
                         />
 
                     </Link>
@@ -1012,22 +1189,23 @@ function Dashboard() {
 
                     <Link
                         to="/app/services"
-                        className="
+                        className={`
                             group
                             flex
                             items-center
                             justify-between
                             rounded-[10px]
                             border
-                            border-[#292929]
-                            bg-[#111111]
                             p-4
                             transition-all
                             duration-200
-                            hover:border-[#3b3b3b]
-                            hover:bg-[#151515]
                             active:scale-[0.99]
-                        "
+                            ${
+                                isDark
+                                    ? "border-[#292929] bg-[#111111] hover:border-[#3b3b3b] hover:bg-[#151515]"
+                                    : "border-zinc-200 bg-white hover:border-amber-200 hover:bg-amber-50/30"
+                            }
+                        `}
                     >
 
                         <div
@@ -1039,7 +1217,7 @@ function Dashboard() {
                         >
 
                             <div
-                                className="
+                                className={`
                                     flex
                                     h-10
                                     w-10
@@ -1047,18 +1225,25 @@ function Dashboard() {
                                     justify-center
                                     rounded-[9px]
                                     border
-                                    border-amber-500/15
-                                    bg-amber-500/[0.06]
                                     transition-transform
                                     duration-200
                                     group-hover:scale-105
-                                "
+                                    ${
+                                        isDark
+                                            ? "border-amber-500/15 bg-amber-500/[0.06]"
+                                            : "border-amber-200 bg-amber-50"
+                                    }
+                                `}
                             >
 
                                 <Settings2
                                     size={17}
                                     strokeWidth={1.8}
-                                    className="text-amber-400"
+                                    className={
+                                        isDark
+                                            ? "text-amber-400"
+                                            : "text-amber-600"
+                                    }
                                 />
 
                             </div>
@@ -1067,22 +1252,30 @@ function Dashboard() {
                             <div>
 
                                 <p
-                                    className="
+                                    className={`
                                         text-[13px]
                                         font-medium
-                                        text-white
-                                    "
+                                        ${
+                                            isDark
+                                                ? "text-white"
+                                                : "text-zinc-900"
+                                        }
+                                    `}
                                 >
                                     Manage Services
                                 </p>
 
 
                                 <p
-                                    className="
+                                    className={`
                                         mt-1
                                         text-[11px]
-                                        text-[#5f5f5f]
-                                    "
+                                        ${
+                                            isDark
+                                                ? "text-[#5f5f5f]"
+                                                : "text-zinc-500"
+                                        }
+                                    `}
                                 >
                                     Configure your business services
                                 </p>
@@ -1095,13 +1288,16 @@ function Dashboard() {
                         <ArrowRight
                             size={16}
                             strokeWidth={1.8}
-                            className="
-                                text-[#555]
+                            className={`
                                 transition-all
                                 duration-200
+                                ${
+                                    isDark
+                                        ? "text-[#555] group-hover:text-amber-400"
+                                        : "text-zinc-400 group-hover:text-amber-600"
+                                }
                                 group-hover:translate-x-0.5
-                                group-hover:text-amber-400
-                            "
+                            `}
                         />
 
                     </Link>
