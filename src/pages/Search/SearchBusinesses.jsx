@@ -1,8 +1,22 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useUser } from "@clerk/clerk-react";
+import {
+    useEffect,
+    useRef,
+    useState,
+} from "react";
+
+import {
+    useNavigate,
+} from "react-router-dom";
+
+import {
+    useUser,
+} from "@clerk/clerk-react";
+
 import toast from "react-hot-toast";
-import { useOutletContext } from "react-router-dom";
+
+import {
+    useOutletContext,
+} from "react-router-dom";
 
 import {
     getBusinesses,
@@ -17,17 +31,63 @@ import SearchForm from "../../components/search/SearchForm";
 import SearchResults from "../../components/search/SearchResults";
 import SearchPagination from "../../components/search/SearchPagination";
 
-const SEARCH_STORAGE_KEY = "leadgen_search_state";
+import {
+    useQueryClient,
+} from "@tanstack/react-query";
+
+
+/*
+|--------------------------------------------------------------------------
+| Search Storage
+|--------------------------------------------------------------------------
+*/
+
+const SEARCH_STORAGE_KEY =
+    "leadgen_search_state";
+
 
 function SearchBusinesses() {
 
-    const searchCancelledRef = useRef(false);
+    const searchCancelledRef =
+        useRef(false);
 
-    const navigate = useNavigate();
+    const navigate =
+        useNavigate();
 
-    const { user } = useUser();
+    const {
+        user,
+    } = useUser();
 
-    const { theme } = useOutletContext();
+    const {
+        theme,
+    } = useOutletContext();
+
+    const queryClient =
+        useQueryClient();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | User-Specific Saved Leads Query Key
+    |--------------------------------------------------------------------------
+    */
+
+    const savedLeadsQueryKey = [
+        "saved-leads",
+        user?.id,
+    ];
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | User-Specific Search Storage Key
+    |--------------------------------------------------------------------------
+    */
+
+    const searchStorageKey =
+        user?.id
+            ? `${SEARCH_STORAGE_KEY}-${user.id}`
+            : null;
 
 
     /*
@@ -36,11 +96,20 @@ function SearchBusinesses() {
     |--------------------------------------------------------------------------
     */
 
-    const [keyword, setKeyword] = useState("");
+    const [
+        keyword,
+        setKeyword,
+    ] = useState("");
 
-    const [location, setLocation] = useState("");
+    const [
+        location,
+        setLocation,
+    ] = useState("");
 
-    const [areas, setAreas] = useState([]);
+    const [
+        areas,
+        setAreas,
+    ] = useState([]);
 
 
     /*
@@ -49,24 +118,45 @@ function SearchBusinesses() {
     |--------------------------------------------------------------------------
     */
 
-    const [loading, setLoading] = useState(false);
+    const [
+        loading,
+        setLoading,
+    ] = useState(false);
 
-    const [searchStage, setSearchStage] = useState(0);
+    const [
+        searchStage,
+        setSearchStage,
+    ] = useState(0);
 
-    const [businesses, setBusinesses] = useState([]);
+    const [
+        businesses,
+        setBusinesses,
+    ] = useState([]);
 
-    const [savedLeads, setSavedLeads] = useState([]);
+    const [
+        savedLeads,
+        setSavedLeads,
+    ] = useState([]);
 
-    const [savingLeadId, setSavingLeadId] = useState(null);
+    const [
+        savingLeadId,
+        setSavingLeadId,
+    ] = useState(null);
 
-    const [searchPerformed, setSearchPerformed] =
-        useState(false);
+    const [
+        searchPerformed,
+        setSearchPerformed,
+    ] = useState(false);
 
-    const [currentPage, setCurrentPage] =
-        useState(1);
+    const [
+        currentPage,
+        setCurrentPage,
+    ] = useState(1);
 
-    const [totalPages, setTotalPages] =
-        useState(1);
+    const [
+        totalPages,
+        setTotalPages,
+    ] = useState(1);
 
 
     /*
@@ -85,10 +175,15 @@ function SearchBusinesses() {
         totalPages,
     }) => {
 
+        if (!searchStorageKey) {
+            return;
+        }
+
+
         try {
 
             sessionStorage.setItem(
-                SEARCH_STORAGE_KEY,
+                searchStorageKey,
                 JSON.stringify({
                     keyword,
                     location,
@@ -120,19 +215,27 @@ function SearchBusinesses() {
 
     const restoreSearchState = () => {
 
+        if (!searchStorageKey) {
+            return false;
+        }
+
+
         try {
 
             const stored =
                 sessionStorage.getItem(
-                    SEARCH_STORAGE_KEY
+                    searchStorageKey
                 );
+
 
             if (!stored) {
                 return false;
             }
 
+
             const parsed =
                 JSON.parse(stored);
+
 
             if (
                 !parsed ||
@@ -202,29 +305,56 @@ function SearchBusinesses() {
 
     const loadSavedLeads = async () => {
 
+        if (!user?.id) {
+            return;
+        }
+
+
         try {
 
             const response =
                 await getSavedLeads();
 
+
             const savedIds =
-                (response.businesses || []).map(
+                (
+                    response.businesses || []
+                ).map(
                     (business) =>
-                        Number(business.id)
+                        Number(
+                            business.id
+                        )
                 );
+
 
             console.log(
                 "Loaded saved lead IDs:",
                 savedIds
             );
 
-            setSavedLeads(savedIds);
+
+            setSavedLeads(
+                savedIds
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Keep TanStack Query cache synchronized.
+            |--------------------------------------------------------------------------
+            */
+
+            queryClient.setQueryData(
+                savedLeadsQueryKey,
+                response
+            );
 
         } catch (error) {
 
             console.error(
                 "Failed to load saved leads:",
-                error?.response?.data || error
+                error?.response?.data ||
+                error
             );
 
         }
@@ -238,80 +368,257 @@ function SearchBusinesses() {
     |--------------------------------------------------------------------------
     */
 
-    const handleSaveLead = async (businessId) => {
+    const handleSaveLead =
+        async (businessId) => {
 
-        const alreadySaved =
-            savedLeads.includes(businessId);
-
-        try {
-
-            setSavingLeadId(businessId);
-
-            if (alreadySaved) {
-
-                await removeSavedLead(
+            const alreadySaved =
+                savedLeads.includes(
                     businessId
                 );
 
-                setSavedLeads((previous) =>
-                    previous.filter(
-                        (id) =>
-                            id !== businessId
-                    )
-                );
 
-                toast.success(
-                    "Lead removed from saved leads."
-                );
+            try {
 
-            } else {
-
-                await saveLead(
+                setSavingLeadId(
                     businessId
                 );
 
-                setSavedLeads((previous) => {
 
-                    if (
-                        previous.includes(
-                            businessId
-                        )
-                    ) {
-                        return previous;
+                /*
+                |--------------------------------------------------------------------------
+                | REMOVE LEAD
+                |--------------------------------------------------------------------------
+                */
+
+                if (alreadySaved) {
+
+                    await removeSavedLead(
+                        businessId
+                    );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Update local search-page state.
+                    |--------------------------------------------------------------------------
+                    */
+
+                    setSavedLeads(
+                        (previous) =>
+                            previous.filter(
+                                (id) =>
+                                    id !==
+                                    businessId
+                            )
+                    );
+
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Immediately remove from Saved Leads
+                    | page cache.
+                    |--------------------------------------------------------------------------
+                    */
+
+                    queryClient.setQueryData(
+                        savedLeadsQueryKey,
+                        (currentData) => {
+
+                            if (!currentData) {
+                                return currentData;
+                            }
+
+
+                            return {
+
+                                ...currentData,
+
+                                businesses:
+                                    (
+                                        currentData.businesses ||
+                                        []
+                                    ).filter(
+                                        (business) =>
+                                            Number(
+                                                business.id
+                                            ) !==
+                                            Number(
+                                                businessId
+                                            )
+                                    ),
+
+                            };
+
+                        }
+                    );
+
+
+                    toast.success(
+                        "Lead removed from saved leads."
+                    );
+
+
+                    return;
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | SAVE LEAD
+                |--------------------------------------------------------------------------
+                */
+
+                const response =
+                    await saveLead(
+                        businessId
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Update local search-page state.
+                |--------------------------------------------------------------------------
+                */
+
+                setSavedLeads(
+                    (previous) => {
+
+                        if (
+                            previous.includes(
+                                businessId
+                            )
+                        ) {
+
+                            return previous;
+
+                        }
+
+
+                        return [
+                            ...previous,
+                            businessId,
+                        ];
+
                     }
+                );
 
-                    return [
-                        ...previous,
-                        businessId,
-                    ];
 
-                });
+                /*
+                |--------------------------------------------------------------------------
+                | Add the saved business to the
+                | Saved Leads cache immediately.
+                |--------------------------------------------------------------------------
+                |
+                | The backend save response should contain
+                | the saved business. If it does, use it
+                | directly. Otherwise invalidate the query
+                | so SavedLeads fetches the latest data.
+                |--------------------------------------------------------------------------
+                */
+
+                const savedBusiness =
+                    response?.business;
+
+
+                if (savedBusiness) {
+
+                    queryClient.setQueryData(
+                        savedLeadsQueryKey,
+                        (currentData) => {
+
+                            if (!currentData) {
+
+                                return {
+                                    ...response,
+                                    businesses: [
+                                        savedBusiness,
+                                    ],
+                                };
+
+                            }
+
+
+                            const currentBusinesses =
+                                currentData.businesses ||
+                                [];
+
+
+                            const alreadyExists =
+                                currentBusinesses.some(
+                                    (business) =>
+                                        Number(
+                                            business.id
+                                        ) ===
+                                        Number(
+                                            businessId
+                                        )
+                                );
+
+
+                            if (
+                                alreadyExists
+                            ) {
+
+                                return currentData;
+
+                            }
+
+
+                            return {
+
+                                ...currentData,
+
+                                businesses: [
+                                    ...currentBusinesses,
+                                    savedBusiness,
+                                ],
+
+                            };
+
+                        }
+                    );
+
+                } else {
+
+                    queryClient.invalidateQueries({
+
+                        queryKey:
+                            savedLeadsQueryKey,
+
+                    });
+
+                }
+
 
                 toast.success(
                     "Lead saved successfully."
                 );
 
+
+            } catch (error) {
+
+                console.error(
+                    "Save/Unsave Lead Error:",
+                    error?.response?.data ||
+                    error
+                );
+
+
+                toast.error(
+                    error?.response?.data?.message ||
+                    "Failed to update saved lead."
+                );
+
+            } finally {
+
+                setSavingLeadId(
+                    null
+                );
+
             }
 
-        } catch (error) {
-
-            console.error(
-                "Save/Unsave Lead Error:",
-                error?.response?.data || error
-            );
-
-            toast.error(
-                error?.response?.data?.message ||
-                "Failed to update saved lead."
-            );
-
-        } finally {
-
-            setSavingLeadId(null);
-
-        }
-
-    };
+        };
 
 
     /*
@@ -323,126 +630,152 @@ function SearchBusinesses() {
     const enrichVisibleBusinesses =
         async (businessList) => {
 
-        if (
-            !user ||
-            !businessList.length
-        ) {
-            return;
-        }
+            if (
+                !user ||
+                !businessList.length
+            ) {
 
-        const CONCURRENCY = 3;
+                return;
 
-        for (
-            let start = 0;
-            start < businessList.length;
-            start += CONCURRENCY
-        ) {
-
-            const batch =
-                businessList.slice(
-                    start,
-                    start + CONCURRENCY
-                );
-
-            await Promise.all(
-                batch.map(async (business) => {
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Website already known
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if (business.website) {
-
-                        setBusinesses((previous) =>
-                            previous.map((item) =>
-                                item.id === business.id
-                                    ? {
-                                        ...item,
-                                        contactStatus:
-                                            "done",
-                                    }
-                                    : item
-                            )
-                        );
-
-                        return;
-
-                    }
+            }
 
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Start Checking
-                    |--------------------------------------------------------------------------
-                    */
+            const CONCURRENCY = 3;
 
-                    setBusinesses((previous) =>
-                        previous.map((item) =>
-                            item.id === business.id
-                                ? {
-                                    ...item,
-                                    contactStatus:
-                                        "checking",
-                                }
-                                : item
-                        )
+
+            for (
+                let start = 0;
+                start <
+                businessList.length;
+                start += CONCURRENCY
+            ) {
+
+                const batch =
+                    businessList.slice(
+                        start,
+                        start + CONCURRENCY
                     );
 
 
-                    try {
+                await Promise.all(
+                    batch.map(
+                        async (business) => {
 
-                        const response =
-                            await enrichBusiness(
-                                business.id
+                            /*
+                            |--------------------------------------------------------------------------
+                            | Website already known
+                            |--------------------------------------------------------------------------
+                            */
+
+                            if (
+                                business.website
+                            ) {
+
+                                setBusinesses(
+                                    (previous) =>
+                                        previous.map(
+                                            (item) =>
+                                                item.id ===
+                                                business.id
+                                                    ? {
+                                                        ...item,
+                                                        contactStatus:
+                                                            "done",
+                                                    }
+                                                    : item
+                                        )
+                                );
+
+
+                                return;
+
+                            }
+
+
+                            /*
+                            |--------------------------------------------------------------------------
+                            | Start Checking
+                            |--------------------------------------------------------------------------
+                            */
+
+                            setBusinesses(
+                                (previous) =>
+                                    previous.map(
+                                        (item) =>
+                                            item.id ===
+                                            business.id
+                                                ? {
+                                                    ...item,
+                                                    contactStatus:
+                                                        "checking",
+                                                }
+                                                : item
+                                    )
                             );
 
-                        const enrichedBusiness =
-                            response?.business;
+
+                            try {
+
+                                const response =
+                                    await enrichBusiness(
+                                        business.id
+                                    );
 
 
-                        setBusinesses((previous) =>
-                            previous.map((item) =>
-                                item.id === business.id
-                                    ? {
-                                        ...item,
-                                        ...(enrichedBusiness || {}),
-                                        contactStatus:
-                                            "done",
-                                    }
-                                    : item
-                            )
-                        );
+                                const enrichedBusiness =
+                                    response?.business;
 
-                    } catch (error) {
 
-                        console.error(
-                            `Failed to enrich ${business.business_name}:`,
-                            error?.response?.data ||
-                            error
-                        );
+                                setBusinesses(
+                                    (previous) =>
+                                        previous.map(
+                                            (item) =>
+                                                item.id ===
+                                                business.id
+                                                    ? {
+                                                        ...item,
+                                                        ...(enrichedBusiness ||
+                                                            {}),
+                                                        contactStatus:
+                                                            "done",
+                                                    }
+                                                    : item
+                                        )
+                                );
 
-                        setBusinesses((previous) =>
-                            previous.map((item) =>
-                                item.id === business.id
-                                    ? {
-                                        ...item,
-                                        contactStatus:
-                                            "failed",
-                                    }
-                                    : item
-                            )
-                        );
+                            } catch (error) {
 
-                    }
+                                console.error(
+                                    `Failed to enrich ${business.business_name}:`,
+                                    error?.response?.data ||
+                                    error
+                                );
 
-                })
-            );
 
-        }
+                                setBusinesses(
+                                    (previous) =>
+                                        previous.map(
+                                            (item) =>
+                                                item.id ===
+                                                business.id
+                                                    ? {
+                                                        ...item,
+                                                        contactStatus:
+                                                            "failed",
+                                                    }
+                                                    : item
+                                        )
+                                );
 
-    };
+                            }
+
+                        }
+                    )
+                );
+
+            }
+
+        };
 
 
     /*
@@ -453,11 +786,17 @@ function SearchBusinesses() {
 
     useEffect(() => {
 
-        if (!searchPerformed) {
+        if (
+            !searchPerformed
+        ) {
+
             return;
+
         }
 
+
         saveSearchState({
+
             keyword,
             location,
             areas,
@@ -465,6 +804,7 @@ function SearchBusinesses() {
             searchPerformed,
             currentPage,
             totalPages,
+
         });
 
     }, [
@@ -475,6 +815,7 @@ function SearchBusinesses() {
         searchPerformed,
         currentPage,
         totalPages,
+        searchStorageKey,
     ]);
 
 
@@ -486,20 +827,28 @@ function SearchBusinesses() {
 
     useEffect(() => {
 
-        if (!user) {
+        if (!user?.id) {
             return;
         }
 
+
         loadSavedLeads();
+
 
         const restored =
             restoreSearchState();
+
 
         if (restored) {
             return;
         }
 
-    }, [user, currentPage]);
+
+    }, [
+        user?.id,
+        currentPage,
+        searchStorageKey,
+    ]);
 
 
     /*
@@ -508,24 +857,32 @@ function SearchBusinesses() {
     |--------------------------------------------------------------------------
     */
 
-    const loadBusinesses = async () => {
+    const loadBusinesses =
+        async () => {
 
-        if (!user) {
-            return;
-        }
+            if (!user) {
+                return;
+            }
 
-        try {
 
-            setLoading(true);
+            try {
 
-            const response =
-                await getBusinesses(
-                    currentPage
+                setLoading(
+                    true
                 );
 
-            const loadedBusinesses =
-                (response.businesses || [])
-                    .map(
+
+                const response =
+                    await getBusinesses(
+                        currentPage
+                    );
+
+
+                const loadedBusinesses =
+                    (
+                        response.businesses ||
+                        []
+                    ).map(
                         (business) => ({
                             ...business,
                             contactStatus:
@@ -534,37 +891,47 @@ function SearchBusinesses() {
                     );
 
 
-            setBusinesses(
-                loadedBusinesses
-            );
+                setBusinesses(
+                    loadedBusinesses
+                );
 
-            setTotalPages(
-                response.totalPages || 1
-            );
 
-            setSearchPerformed(false);
+                setTotalPages(
+                    response.totalPages ||
+                    1
+                );
 
-            enrichVisibleBusinesses(
-                loadedBusinesses
-            );
 
-        } catch (error) {
+                setSearchPerformed(
+                    false
+                );
 
-            console.error(
-                error
-            );
 
-            toast.error(
-                "Failed to load businesses."
-            );
+                enrichVisibleBusinesses(
+                    loadedBusinesses
+                );
 
-        } finally {
 
-            setLoading(false);
+            } catch (error) {
 
-        }
+                console.error(
+                    error
+                );
 
-    };
+
+                toast.error(
+                    "Failed to load businesses."
+                );
+
+            } finally {
+
+                setLoading(
+                    false
+                );
+
+            }
+
+        };
 
 
     /*
@@ -573,29 +940,49 @@ function SearchBusinesses() {
     |--------------------------------------------------------------------------
     */
 
-    const startSearchProgress = () => {
+    const startSearchProgress =
+        () => {
 
-        setSearchStage(0);
+            setSearchStage(
+                0
+            );
 
-        const timers = [
 
-            setTimeout(() => {
-                setSearchStage(1);
-            }, 2200),
+            const timers = [
 
-            setTimeout(() => {
-                setSearchStage(2);
-            }, 6000),
+                setTimeout(
+                    () => {
+                        setSearchStage(
+                            1
+                        );
+                    },
+                    2200
+                ),
 
-            setTimeout(() => {
-                setSearchStage(3);
-            }, 11000),
+                setTimeout(
+                    () => {
+                        setSearchStage(
+                            2
+                        );
+                    },
+                    6000
+                ),
 
-        ];
+                setTimeout(
+                    () => {
+                        setSearchStage(
+                            3
+                        );
+                    },
+                    11000
+                ),
 
-        return timers;
+            ];
 
-    };
+
+            return timers;
+
+        };
 
 
     /*
@@ -604,22 +991,30 @@ function SearchBusinesses() {
     |--------------------------------------------------------------------------
     */
 
-    const handleCancelSearch = () => {
+    const handleCancelSearch =
+        () => {
 
-        searchCancelledRef.current = true;
+            searchCancelledRef.current =
+                true;
 
-        setLoading(false);
 
-        setSearchStage(0);
+            setLoading(
+                false
+            );
 
-        toast(
-            "Search cancelled.",
-            {
-                duration: 2500,
-            }
-        );
+            setSearchStage(
+                0
+            );
 
-    };
+
+            toast(
+                "Search cancelled.",
+                {
+                    duration: 2500,
+                }
+            );
+
+        };
 
 
     /*
@@ -628,83 +1023,16 @@ function SearchBusinesses() {
     |--------------------------------------------------------------------------
     */
 
-    const handleSearch = async (e) => {
+    const handleSearch =
+        async (e) => {
 
-        e.preventDefault();
-
-        if (!user) {
-
-            toast.error(
-                "User not found."
-            );
-
-            return;
-
-        }
+            e.preventDefault();
 
 
-        const trimmedKeyword =
-            keyword.trim();
+            if (!user) {
 
-        const trimmedLocation =
-            location.trim();
-
-        const cleanAreas =
-            areas
-                .map(
-                    (area) =>
-                        area.trim()
-                )
-                .filter(Boolean);
-
-
-        if (!trimmedKeyword) {
-
-            toast.error(
-                "Please enter a keyword."
-            );
-
-            return;
-
-        }
-
-
-        if (!trimmedLocation) {
-
-            toast.error(
-                "Please enter a location."
-            );
-
-            return;
-
-        }
-
-
-        try {
-
-            searchCancelledRef.current = false;
-
-            setLoading(true);
-
-            const progressTimers =
-                startSearchProgress();
-
-            setCurrentPage(1);
-
-
-            const response =
-                await searchBusinesses(
-                    trimmedKeyword,
-                    trimmedLocation,
-                    cleanAreas
-                );
-
-
-            if (searchCancelledRef.current) {
-
-                progressTimers.forEach(
-                    (timer) =>
-                        clearTimeout(timer)
+                toast.error(
+                    "User not found."
                 );
 
                 return;
@@ -712,17 +1040,107 @@ function SearchBusinesses() {
             }
 
 
-            progressTimers.forEach(
-                (timer) =>
-                    clearTimeout(timer)
-            );
-
-            setSearchStage(4);
+            const trimmedKeyword =
+                keyword.trim();
 
 
-            const foundBusinesses =
-                (response.businesses || [])
+            const trimmedLocation =
+                location.trim();
+
+
+            const cleanAreas =
+                areas
                     .map(
+                        (area) =>
+                            area.trim()
+                    )
+                    .filter(Boolean);
+
+
+            if (!trimmedKeyword) {
+
+                toast.error(
+                    "Please enter a keyword."
+                );
+
+                return;
+
+            }
+
+
+            if (!trimmedLocation) {
+
+                toast.error(
+                    "Please enter a location."
+                );
+
+                return;
+
+            }
+
+
+            try {
+
+                searchCancelledRef.current =
+                    false;
+
+
+                setLoading(
+                    true
+                );
+
+
+                const progressTimers =
+                    startSearchProgress();
+
+
+                setCurrentPage(
+                    1
+                );
+
+
+                const response =
+                    await searchBusinesses(
+                        trimmedKeyword,
+                        trimmedLocation,
+                        cleanAreas
+                    );
+
+
+                if (
+                    searchCancelledRef.current
+                ) {
+
+                    progressTimers.forEach(
+                        (timer) =>
+                            clearTimeout(
+                                timer
+                            )
+                    );
+
+                    return;
+
+                }
+
+
+                progressTimers.forEach(
+                    (timer) =>
+                        clearTimeout(
+                            timer
+                        )
+                );
+
+
+                setSearchStage(
+                    4
+                );
+
+
+                const foundBusinesses =
+                    (
+                        response.businesses ||
+                        []
+                    ).map(
                         (business) => ({
                             ...business,
                             contactStatus:
@@ -731,116 +1149,138 @@ function SearchBusinesses() {
                     );
 
 
-            setKeyword(
-                trimmedKeyword
-            );
-
-            setLocation(
-                trimmedLocation
-            );
-
-            setAreas(
-                cleanAreas
-            );
-
-            setBusinesses(
-                foundBusinesses
-            );
-
-            setTotalPages(
-                response.totalPages || 1
-            );
-
-            setSearchPerformed(
-                true
-            );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Save Immediately
-            |--------------------------------------------------------------------------
-            */
-
-            saveSearchState({
-                keyword:
-                    trimmedKeyword,
-
-                location:
-                    trimmedLocation,
-
-                areas:
-                    cleanAreas,
-
-                businesses:
-                    foundBusinesses,
-
-                searchPerformed:
-                    true,
-
-                currentPage:
-                    1,
-
-                totalPages:
-                    response.totalPages || 1,
-            });
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | Enrich In Background
-            |--------------------------------------------------------------------------
-            */
-
-            enrichVisibleBusinesses(
-                foundBusinesses
-            );
-
-
-            const count =
-                response.count ?? 0;
-
-            if (count > 0) {
-
-                toast.success(
-                    `${count} businesses found in ${cleanAreas.length
-                        ? cleanAreas.join(", ")
-                        : trimmedLocation}`,
-                    {
-                        duration: 4000,
-                    }
+                setKeyword(
+                    trimmedKeyword
                 );
 
-            } else {
 
-                toast(
-                    `No businesses found in ${cleanAreas.length
-                        ? cleanAreas.join(", ")
-                        : trimmedLocation}`,
-                    {
-                        duration: 4000,
-                    }
+                setLocation(
+                    trimmedLocation
+                );
+
+
+                setAreas(
+                    cleanAreas
+                );
+
+
+                setBusinesses(
+                    foundBusinesses
+                );
+
+
+                setTotalPages(
+                    response.totalPages ||
+                    1
+                );
+
+
+                setSearchPerformed(
+                    true
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Save Immediately
+                |--------------------------------------------------------------------------
+                */
+
+                saveSearchState({
+
+                    keyword:
+                        trimmedKeyword,
+
+                    location:
+                        trimmedLocation,
+
+                    areas:
+                        cleanAreas,
+
+                    businesses:
+                        foundBusinesses,
+
+                    searchPerformed:
+                        true,
+
+                    currentPage:
+                        1,
+
+                    totalPages:
+                        response.totalPages ||
+                        1,
+
+                });
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Enrich In Background
+                |--------------------------------------------------------------------------
+                */
+
+                enrichVisibleBusinesses(
+                    foundBusinesses
+                );
+
+
+                const count =
+                    response.count ??
+                    0;
+
+
+                if (count > 0) {
+
+                    toast.success(
+                        `${count} businesses found in ${
+                            cleanAreas.length
+                                ? cleanAreas.join(
+                                    ", "
+                                )
+                                : trimmedLocation
+                        }`,
+                        {
+                            duration: 4000,
+                        }
+                    );
+
+                } else {
+
+                    toast(
+                        `No businesses found in ${
+                            cleanAreas.length
+                                ? cleanAreas.join(
+                                    ", "
+                                )
+                                : trimmedLocation
+                        }`,
+                        {
+                            duration: 4000,
+                        }
+                    );
+
+                }
+
+            } catch (error) {
+
+                console.error(
+                    error
+                );
+
+
+                toast.error(
+                    "Search failed."
+                );
+
+            } finally {
+
+                setLoading(
+                    false
                 );
 
             }
 
-        } catch (error) {
-
-            console.error(
-                error
-            );
-
-            toast.error(
-                "Search failed."
-            );
-
-        } finally {
-
-            setLoading(false);
-
-        }
-
-    };
+        };
 
 
     /*
@@ -852,9 +1292,11 @@ function SearchBusinesses() {
     const handlePageChange =
         async (page) => {
 
-        setCurrentPage(page);
+            setCurrentPage(
+                page
+            );
 
-    };
+        };
 
 
     /*
@@ -868,37 +1310,79 @@ function SearchBusinesses() {
         <div className="space-y-8">
 
             <SearchForm
-                keyword={keyword}
-                theme={theme}
-                location={location}
-                areas={areas}
-                loading={loading}
-                onKeywordChange={setKeyword}
-                onLocationChange={setLocation}
-                onAreasChange={setAreas}
-                onSubmit={handleSearch}
-                onCancel={handleCancelSearch}
+                keyword={
+                    keyword
+                }
+                theme={
+                    theme
+                }
+                location={
+                    location
+                }
+                areas={
+                    areas
+                }
+                loading={
+                    loading
+                }
+                onKeywordChange={
+                    setKeyword
+                }
+                onLocationChange={
+                    setLocation
+                }
+                onAreasChange={
+                    setAreas
+                }
+                onSubmit={
+                    handleSearch
+                }
+                onCancel={
+                    handleCancelSearch
+                }
             />
 
 
             <SearchResults
-                businesses={businesses}
-                theme={theme}
-                loading={loading}
-                searchPerformed={searchPerformed}
-                keyword={keyword}
-                location={location}
-                    areas={areas}
-
-                searchStage={searchStage}
-                onBusinessClick={(id) =>
-                    navigate(
-                        `/app/business/${id}`
-                    )
+                businesses={
+                    businesses
                 }
-                onSaveLead={handleSaveLead}
-                savedLeads={savedLeads}
-                savingLeadId={savingLeadId}
+                theme={
+                    theme
+                }
+                loading={
+                    loading
+                }
+                searchPerformed={
+                    searchPerformed
+                }
+                keyword={
+                    keyword
+                }
+                location={
+                    location
+                }
+                areas={
+                    areas
+                }
+                searchStage={
+                    searchStage
+                }
+                onBusinessClick={
+                    (id) =>
+                        navigate(
+                            `/app/business/${id}`
+                        )
+                }
+                onSaveLead={
+                    handleSaveLead
+                }
+                savedLeads={
+                    savedLeads
+                }
+                savingLeadId={
+                    savingLeadId
+                }
             />
 
 
@@ -912,7 +1396,9 @@ function SearchBusinesses() {
                 onPageChange={
                     handlePageChange
                 }
-                theme={theme}
+                theme={
+                    theme
+                }
             />
 
         </div>
@@ -920,5 +1406,6 @@ function SearchBusinesses() {
     );
 
 }
+
 
 export default SearchBusinesses;

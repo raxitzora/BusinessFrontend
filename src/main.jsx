@@ -1,47 +1,276 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { ClerkProvider } from "@clerk/clerk-react";
-import { BrowserRouter } from "react-router-dom";
-import { Toaster } from "react-hot-toast";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+    StrictMode,
+    useMemo,
+} from "react";
+
+import {
+    createRoot,
+} from "react-dom/client";
+
+import {
+    ClerkProvider,
+    useAuth,
+} from "@clerk/clerk-react";
+
+import {
+    BrowserRouter,
+} from "react-router-dom";
+
+import {
+    Toaster,
+} from "react-hot-toast";
+
+import {
+    QueryClient,
+} from "@tanstack/react-query";
+
+import {
+    PersistQueryClientProvider,
+} from "@tanstack/react-query-persist-client";
+
+import {
+    createSyncStoragePersister,
+} from "@tanstack/query-sync-storage-persister";
 
 import "./index.css";
 import App from "./App";
 
-const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
+/*
+|--------------------------------------------------------------------------
+| Clerk
+|--------------------------------------------------------------------------
+*/
+
+const clerkPubKey =
+    import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
 
 if (!clerkPubKey) {
-    throw new Error("Missing Clerk Publishable Key");
+
+    throw new Error(
+        "Missing Clerk Publishable Key"
+    );
+
 }
 
-const queryClient = new QueryClient({
-    defaultOptions: {
-        queries: {
-            staleTime: 5 * 60 * 1000,
-            gcTime: 10 * 60 * 1000,
-            refetchOnWindowFocus: false,
-            retry: 1,
+
+/*
+|--------------------------------------------------------------------------
+| Query Application
+|--------------------------------------------------------------------------
+*/
+
+const QueryApplication = () => {
+
+    const {
+        isLoaded,
+        isSignedIn,
+        userId,
+    } = useAuth();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Clerk Loading
+    |--------------------------------------------------------------------------
+    */
+
+    if (!isLoaded) {
+
+        return (
+            <div>
+                Loading...
+            </div>
+        );
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | User-Specific Application
+    |
+    | The key forces a complete remount when the authenticated
+    | Clerk user changes.
+    |--------------------------------------------------------------------------
+    */
+
+    return (
+
+        <UserQueryApplication
+            key={
+                isSignedIn && userId
+                    ? userId
+                    : "guest"
+            }
+            userId={
+                isSignedIn
+                    ? userId
+                    : null
+            }
+        />
+
+    );
+
+};
+
+
+/*
+|--------------------------------------------------------------------------
+| User Query Application
+|--------------------------------------------------------------------------
+*/
+
+const UserQueryApplication = ({
+    userId,
+}) => {
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | User-Specific Cache Key
+    |--------------------------------------------------------------------------
+    */
+
+    const cacheKey =
+        userId
+            ? `leadflow-react-query-cache-${userId}`
+            : "leadflow-react-query-cache-guest";
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Query Client
+    |--------------------------------------------------------------------------
+    */
+
+    const queryClient = useMemo(
+        () => {
+
+            return new QueryClient({
+
+                defaultOptions: {
+
+                    queries: {
+
+                        staleTime:
+                            5 * 60 * 1000,
+
+                        gcTime:
+                            7 *
+                            24 *
+                            60 *
+                            60 *
+                            1000,
+
+                        refetchOnWindowFocus:
+                            false,
+
+                        retry: 1,
+
+                    },
+
+                },
+
+            });
+
         },
-    },
-});
+        []
+    );
 
-createRoot(document.getElementById("root")).render(
+
+    /*
+    |--------------------------------------------------------------------------
+    | Persister
+    |--------------------------------------------------------------------------
+    */
+
+    const persister = useMemo(
+        () => {
+
+            return createSyncStoragePersister({
+
+                storage:
+                    window.localStorage,
+
+                key:
+                    cacheKey,
+
+                throttleTime:
+                    1000,
+
+            });
+
+        },
+        [cacheKey]
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Application
+    |--------------------------------------------------------------------------
+    */
+
+    return (
+
+        <PersistQueryClientProvider
+            client={queryClient}
+            persistOptions={{
+                persister,
+
+                maxAge:
+                    7 *
+                    24 *
+                    60 *
+                    60 *
+                    1000,
+            }}
+        >
+
+            <BrowserRouter>
+
+                <App />
+
+                <Toaster
+                    position="top-center"
+                    toastOptions={{
+                        duration: 3500,
+                    }}
+                />
+
+            </BrowserRouter>
+
+        </PersistQueryClientProvider>
+
+    );
+
+};
+
+
+/*
+|--------------------------------------------------------------------------
+| Application Entry
+|--------------------------------------------------------------------------
+*/
+
+createRoot(
+    document.getElementById("root")
+).render(
+
     <StrictMode>
-        <ClerkProvider publishableKey={clerkPubKey}>
-            <QueryClientProvider client={queryClient}>
-                <BrowserRouter>
 
-                    <App />
+        <ClerkProvider
+            publishableKey={
+                clerkPubKey
+            }
+        >
 
-                    <Toaster
-                        position="top-center"
-                        toastOptions={{
-                            duration: 3500,
-                        }}
-                    />
+            <QueryApplication />
 
-                </BrowserRouter>
-            </QueryClientProvider>
         </ClerkProvider>
+
     </StrictMode>
+
 );

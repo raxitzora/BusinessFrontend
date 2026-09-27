@@ -9,6 +9,7 @@ import {
     Settings,
     PanelLeftClose,
     PanelLeftOpen,
+    X,
 } from "lucide-react";
 
 import { NavLink } from "react-router-dom";
@@ -67,18 +68,30 @@ function SidebarItem({
     item,
     collapsed,
     theme,
+    mobileOpen,
+    setMobileOpen,
 }) {
     const Icon = item.icon;
 
     const isDark = theme === "dark";
 
+    const handleNavigation = () => {
+        if (mobileOpen) {
+            setMobileOpen(false);
+        }
+    };
+
     return (
         <NavLink
             to={item.path}
             title={collapsed ? item.title : undefined}
+            onClick={handleNavigation}
             className={({ isActive }) =>
                 `
-                group flex h-10 items-center
+                group
+                flex
+                h-10
+                items-center
                 rounded-[9px]
                 text-[14px]
                 font-medium
@@ -97,7 +110,7 @@ function SidebarItem({
                             ? "bg-[#242424] text-white"
                             : "bg-[#eeeeef] text-[#111111]"
                         : isDark
-    ? "text-white hover:bg-[#1c1c1c] hover:text-white"
+                            ? "text-white hover:bg-[#1c1c1c] hover:text-white"
                             : "text-[#666] hover:bg-[#eeeeef] hover:text-[#111111]"
                 }
                 `
@@ -118,7 +131,7 @@ function SidebarItem({
                                         ? "text-white"
                                         : "text-[#111111]"
                                     : isDark
-    ? "text-white group-hover:text-white"
+                                        ? "text-white group-hover:text-white"
                                         : "text-white group-hover:text-[#222]"
                             }
                         `}
@@ -140,6 +153,8 @@ function SidebarSection({
     items,
     collapsed,
     theme,
+    mobileOpen,
+    setMobileOpen,
 }) {
     const isDark = theme === "dark";
 
@@ -148,11 +163,16 @@ function SidebarSection({
             {!collapsed && (
                 <div className="mb-2 px-3">
                     <span
-                        className={`text-[12px] font-medium tracking-[-0.01em] ${
-                            isDark
-    ? "text-white"
-                                : "text-[#999]"
-                        }`}
+                        className={`
+                            text-[12px]
+                            font-medium
+                            tracking-[-0.01em]
+                            ${
+                                isDark
+                                    ? "text-white"
+                                    : "text-[#999]"
+                            }
+                        `}
                     >
                         {title}
                     </span>
@@ -166,6 +186,8 @@ function SidebarSection({
                         item={item}
                         collapsed={collapsed}
                         theme={theme}
+                        mobileOpen={mobileOpen}
+                        setMobileOpen={setMobileOpen}
                     />
                 ))}
             </div>
@@ -177,6 +199,8 @@ function Sidebar({
     collapsed,
     setCollapsed,
     theme,
+    mobileOpen = false,
+    setMobileOpen = () => {},
 }) {
     const isDark = theme === "dark";
 
@@ -186,6 +210,7 @@ function Sidebar({
                 relative
                 flex
                 h-screen
+                w-full
                 shrink-0
                 flex-col
                 border-r
@@ -198,9 +223,11 @@ function Sidebar({
                         : "border-[#e5e5e5] bg-[#ffffff]"
                 }
                 ${
-                    collapsed
-                        ? "w-[72px]"
-                        : "w-[260px]"
+                    mobileOpen
+                        ? "w-full"
+                        : collapsed
+                            ? "lg:w-[72px]"
+                            : "lg:w-[260px]"
                 }
             `}
         >
@@ -226,6 +253,11 @@ function Sidebar({
                 {!collapsed && (
                     <NavLink
                         to="/app/dashboard"
+                        onClick={() => {
+                            if (mobileOpen) {
+                                setMobileOpen(false);
+                            }
+                        }}
                         className={`
                             flex
                             items-center
@@ -371,15 +403,46 @@ function Sidebar({
                     </div>
                 )}
 
-                {/* Collapse */}
+                {/* Mobile Close */}
 
-                {!collapsed && (
+                {mobileOpen && (
+                    <button
+                        type="button"
+                        onClick={() => setMobileOpen(false)}
+                        title="Close sidebar"
+                        aria-label="Close sidebar"
+                        className={`
+                            flex
+                            h-9
+                            w-9
+                            items-center
+                            justify-center
+                            rounded-lg
+                            transition-colors
+                            duration-150
+                            ${
+                                isDark
+                                    ? "text-white hover:bg-[#1b1b1b]"
+                                    : "text-[#111] hover:bg-[#eeeeee]"
+                            }
+                        `}
+                    >
+                        <X
+                            size={19}
+                            strokeWidth={1.8}
+                        />
+                    </button>
+                )}
+
+                {/* Desktop Collapse */}
+
+                {!collapsed && !mobileOpen && (
                     <button
                         type="button"
                         onClick={() => setCollapsed(true)}
                         title="Collapse sidebar"
                         className={`
-                            flex
+                            hidden
                             h-8
                             w-8
                             items-center
@@ -388,6 +451,7 @@ function Sidebar({
                             transition-all
                             duration-150
                             active:scale-95
+                            lg:flex
                             ${
                                 isDark
                                     ? "text-white hover:bg-[#1b1b1b] hover:text-white"
@@ -404,10 +468,10 @@ function Sidebar({
             </div>
 
             {/* ------------------------------------------------ */}
-            {/* Expand button */}
+            {/* Expand Button - Desktop Only */}
             {/* ------------------------------------------------ */}
 
-            {collapsed && (
+            {collapsed && !mobileOpen && (
                 <button
                     type="button"
                     onClick={() => setCollapsed(false)}
@@ -417,7 +481,7 @@ function Sidebar({
                         -right-3
                         top-[19px]
                         z-30
-                        flex
+                        hidden
                         h-7
                         w-7
                         items-center
@@ -428,6 +492,7 @@ function Sidebar({
                         transition-all
                         duration-150
                         active:scale-95
+                        lg:flex
                         ${
                             isDark
                                 ? "border-[#303030] bg-[#111111] text-white hover:border-[#444] hover:bg-[#1d1d1d] hover:text-white"
@@ -466,6 +531,8 @@ function Sidebar({
                     items={workspaceNavigation}
                     collapsed={collapsed}
                     theme={theme}
+                    mobileOpen={mobileOpen}
+                    setMobileOpen={setMobileOpen}
                 />
 
                 <SidebarSection
@@ -473,6 +540,8 @@ function Sidebar({
                     items={manageNavigation}
                     collapsed={collapsed}
                     theme={theme}
+                    mobileOpen={mobileOpen}
+                    setMobileOpen={setMobileOpen}
                 />
 
                 <SidebarSection
@@ -480,6 +549,8 @@ function Sidebar({
                     items={accountNavigation}
                     collapsed={collapsed}
                     theme={theme}
+                    mobileOpen={mobileOpen}
+                    setMobileOpen={setMobileOpen}
                 />
             </nav>
 
@@ -536,7 +607,7 @@ function Sidebar({
                                     tracking-[-0.01em]
                                     ${
                                         isDark
-    ? "text-white"
+                                            ? "text-white"
                                             : "text-[#222]"
                                     }
                                 `}
@@ -550,8 +621,8 @@ function Sidebar({
                                     text-[11px]
                                     ${
                                         isDark
-    ? "text-white"                                     
-           : "text-[#999]"
+                                            ? "text-white"
+                                            : "text-[#999]"
                                     }
                                 `}
                             >

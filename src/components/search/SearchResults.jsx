@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 import {
+    Search,
     SearchX,
     Globe,
     Building2,
@@ -32,8 +33,33 @@ function SearchResults({
     const [activeView, setActiveView] =
         useState("businesses");
 
+    const [businessSearch, setBusinessSearch] =
+        useState("");
+
     const [activeOpportunity, setActiveOpportunity] =
         useState(null);
+
+    /*
+    |--------------------------------------------------------------------------
+    | Business Name Search
+    |--------------------------------------------------------------------------
+    */
+
+    const filteredBusinesses = useMemo(() => {
+        const query = businessSearch
+            .trim()
+            .toLowerCase();
+
+        if (!query) {
+            return businesses;
+        }
+
+        return businesses.filter((business) =>
+            String(business.business_name || "")
+                .toLowerCase()
+                .includes(query)
+        );
+    }, [businesses, businessSearch]);
 
     /*
     |--------------------------------------------------------------------------
@@ -148,8 +174,8 @@ function SearchResults({
                             strokeWidth={1.7}
                             className={
                                 isDark
-                                    ? "text-[#777]"
-                                    : "text-[#999]"
+                                    ? "text-white"
+                                    : "text-[#555]"
                             }
                         />
                     </div>
@@ -170,7 +196,19 @@ function SearchResults({
                         No businesses found
                     </h2>
 
-                    <p className="mt-2 text-[13px] leading-6 text-[#777]">
+                    <p
+                        className={`
+                            mt-2
+                            text-[12px]
+sm:text-[13px]
+                            leading-6
+                            ${
+                                isDark
+                                    ? "text-white"
+                                    : "text-[#777]"
+                            }
+                        `}
+                    >
                         We couldn't find any businesses
                         matching your search. Try a
                         different keyword, a nearby city,
@@ -255,11 +293,10 @@ function SearchResults({
     });
 
     const discoveredAreas =
-        Object.entries(areaCounts)
-            .sort(
-                (a, b) =>
-                    b[1] - a[1]
-            );
+        Object.entries(areaCounts).sort(
+            (a, b) =>
+                b[1] - a[1]
+        );
 
     /*
     |--------------------------------------------------------------------------
@@ -306,8 +343,6 @@ function SearchResults({
     return (
         <section className="space-y-8">
 
-
-
             {/* ------------------------------------------------------------ */}
             {/* Search Scope */}
             {/* ------------------------------------------------------------ */}
@@ -339,7 +374,7 @@ function SearchResults({
                             tracking-[0.08em]
                             ${
                                 isDark
-                                    ? "text-[#666]"
+                                    ? "text-white"
                                     : "text-[#888]"
                             }
                         `}
@@ -358,7 +393,7 @@ function SearchResults({
                                 text-[11px]
                                 ${
                                     isDark
-                                        ? "border-[#292929] bg-[#151515] text-[#bbb]"
+                                        ? "border-[#292929] bg-[#151515] text-white"
                                         : "border-[#e1e1e1] bg-[#fafafa] text-[#555]"
                                 }
                             `}
@@ -369,122 +404,136 @@ function SearchResults({
                 </div>
             )}
 
-            {/* ------------------------------------------------------------ */}
-            {/* Search Overview */}
-            {/* ------------------------------------------------------------ */}
+     {/* ------------------------------------------------------------ */}
+{/* Main Navigation */}
+{/* ------------------------------------------------------------ */}
+
+<div
+    className={`
+        grid
+        w-full
+        grid-cols-2
+        gap-1
+        rounded-[10px]
+        border
+        p-1
+        ${
+            isDark
+                ? "border-[#292929] bg-[#0b0b0b]"
+                : "border-[#dedede] bg-[#f7f7f7]"
+        }
+    `}
+>
+    {/* Businesses */}
+
+    <button
+        type="button"
+        onClick={() => {
+            setActiveView("businesses");
+            setActiveOpportunity(null);
+        }}
+        className={`
+            flex
+            min-w-0
+            items-center
+            justify-center
+            gap-1.5
+            rounded-lg
+            px-2
+            py-2.5
+            text-[12px]
+            font-medium
+            transition-colors
+            sm:gap-2
+            sm:px-4
+            sm:py-3
+            sm:text-[13px]
+            ${
+                activeView === "businesses"
+                    ? isDark
+                        ? "bg-[#1a1a1a] text-white"
+                        : "bg-white text-[#171717]"
+                    : isDark
+                        ? "text-white hover:text-white"
+                        : "text-[#777] hover:text-[#333]"
+            }
+        `}
+    >
+        <Building2
+            size={15}
+            strokeWidth={1.7}
+            className="shrink-0"
+        />
+
+        <span className="truncate">
+            Businesses
+        </span>
+
+        <span
+            className={`
+                shrink-0
+                rounded-md
+                px-1.5
+                py-0.5
+                text-[10px]
+                ${
+                    isDark
+                        ? "bg-[#242424] text-white"
+                        : "bg-[#e9e9e9] text-[#666]"
+                }
+            `}
+        >
+            {totalBusinesses}
+        </span>
+    </button>
 
 
-            {/* ------------------------------------------------------------ */}
-            {/* Main Navigation */}
-            {/* ------------------------------------------------------------ */}
+    {/* Business Opportunities */}
 
-            <div
-                className={`
-                    flex
-                    w-full
-                    rounded-[10px]
-                    border
-                    p-1
-                    ${
-                        isDark
-                            ? "border-[#292929] bg-[#0b0b0b]"
-                            : "border-[#dedede] bg-[#f7f7f7]"
-                    }
-                `}
-            >
+    <button
+        type="button"
+        onClick={() => {
+            setActiveView("opportunities");
+            setActiveOpportunity("all");
+        }}
+        className={`
+            flex
+            min-w-0
+            items-center
+            justify-center
+            gap-1.5
+            rounded-lg
+            px-2
+            py-2.5
+            text-[12px]
+            font-medium
+            transition-colors
+            sm:gap-2
+            sm:px-4
+            sm:py-3
+            sm:text-[13px]
+            ${
+                activeView === "opportunities"
+                    ? isDark
+                        ? "bg-[#1a1a1a] text-white"
+                        : "bg-white text-[#171717]"
+                    : isDark
+                        ? "text-white hover:text-white"
+                        : "text-[#777] hover:text-[#333]"
+            }
+        `}
+    >
+        <Star
+            size={15}
+            strokeWidth={1.7}
+            className="shrink-0"
+        />
 
-                <button
-                    type="button"
-                    onClick={() => {
-                        setActiveView("businesses");
-                        setActiveOpportunity(null);
-                    }}
-                    className={`
-                        flex
-                        flex-1
-                        items-center
-                        justify-center
-                        rounded-lg
-                        px-4
-                        py-3
-                        text-[13px]
-                        font-medium
-                        transition-colors
-                        ${
-                            activeView === "businesses"
-                                ? isDark
-                                    ? "bg-[#1a1a1a] text-white"
-                                    : "bg-white text-[#171717]"
-                                : isDark
-                                    ? "text-[#777] hover:text-[#ddd]"
-                                    : "text-[#777] hover:text-[#333]"
-                        }
-                    `}
-                >
-                    <Building2
-                        size={15}
-                        strokeWidth={1.7}
-                        className="mr-2"
-                    />
-
-                    Businesses
-
-                    <span
-                        className={`
-                            ml-2
-                            rounded-md
-                            px-1.5
-                            py-0.5
-                            text-[10px]
-                            ${
-                                isDark
-                                    ? "bg-[#242424] text-[#aaa]"
-                                    : "bg-[#e9e9e9] text-[#666]"
-                            }
-                        `}
-                    >
-                        {totalBusinesses}
-                    </span>
-                </button>
-
-                <button
-                    type="button"
-                    onClick={() => {
-                        setActiveView("opportunities");
-                        setActiveOpportunity(null);
-                    }}
-                    className={`
-                        flex
-                        flex-1
-                        items-center
-                        justify-center
-                        rounded-lg
-                        px-4
-                        py-3
-                        text-[13px]
-                        font-medium
-                        transition-colors
-                        ${
-                            activeView === "opportunities"
-                                ? isDark
-                                    ? "bg-[#1a1a1a] text-white"
-                                    : "bg-white text-[#171717]"
-                                : isDark
-                                    ? "text-[#777] hover:text-[#ddd]"
-                                    : "text-[#777] hover:text-[#333]"
-                        }
-                    `}
-                >
-                    <Star
-                        size={15}
-                        strokeWidth={1.7}
-                        className="mr-2"
-                    />
-
-                    Business Opportunities
-                </button>
-
-            </div>
+        <span className="truncate">
+            Business Opportunities
+        </span>
+    </button>
+</div>
 
             {/* ------------------------------------------------------------ */}
             {/* Businesses View */}
@@ -492,6 +541,93 @@ function SearchResults({
 
             {activeView === "businesses" && (
                 <div className="space-y-4">
+
+                    {/* ---------------------------------------------------- */}
+                    {/* Business Name Search */}
+                    {/* ---------------------------------------------------- */}
+
+                    <div
+                        className={`
+    flex
+    min-w-0
+    items-center
+    gap-2.5
+    rounded-[10px]
+    border
+    px-3
+    py-2.5
+    transition-colors
+    duration-200
+    sm:gap-3
+    sm:px-4
+    sm:py-3
+    ${
+        isDark
+            ? "border-[#292929] bg-[#0f0f0f]"
+            : "border-[#dedede] bg-white"
+    }
+`}
+                    >
+                        <Search
+                            size={17}
+                            strokeWidth={1.8}
+                            className={
+                                isDark
+                                    ? "shrink-0 text-white"
+                                    : "shrink-0 text-[#555]"
+                            }
+                        />
+
+                        <input
+                            type="text"
+                            value={businessSearch}
+                            onChange={(event) =>
+                                setBusinessSearch(
+                                    event.target.value
+                                )
+                            }
+                            placeholder="Search businesses by name..."
+                            className={`
+                                min-w-0
+                                flex-1
+                                bg-transparent
+                                text-[12px]
+sm:text-[13px]
+                                outline-none
+                                placeholder:opacity-100
+                                ${
+                                    isDark
+                                        ? "text-white placeholder:text-[#777]"
+                                        : "text-[#171717] placeholder:text-[#999]"
+                                }
+                            `}
+                        />
+
+                        {businessSearch && (
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setBusinessSearch("")
+                                }
+                                className={`
+                                    shrink-0
+                                    text-[12px]
+                                    transition-colors
+                                    ${
+                                        isDark
+                                            ? "text-white hover:text-white"
+                                            : "text-[#999] hover:text-[#171717]"
+                                    }
+                                `}
+                            >
+                                Clear
+                            </button>
+                        )}
+                    </div>
+
+                    {/* ---------------------------------------------------- */}
+                    {/* Businesses Header */}
+                    {/* ---------------------------------------------------- */}
 
                     <div
                         className={`
@@ -530,7 +666,7 @@ function SearchResults({
                                     text-[12px]
                                     ${
                                         isDark
-                                            ? "text-[#666]"
+                                            ? "text-white"
                                             : "text-[#777]"
                                     }
                                 `}
@@ -546,83 +682,1837 @@ function SearchResults({
                                 text-[12px]
                                 ${
                                     isDark
-                                        ? "text-[#666]"
+                                        ? "text-white"
                                         : "text-[#888]"
                                 }
                             `}
                         >
-                            {totalBusinesses} results
+                            {filteredBusinesses.length}{" "}
+                            {filteredBusinesses.length === 1
+                                ? "result"
+                                : "results"}
                         </span>
                     </div>
 
-                    <div
-                        className="
-                            grid
-                            gap-4
-                            md:grid-cols-2
-                            xl:grid-cols-3
-                        "
-                    >
-                        {businesses.map(
-                            (business) => (
-                                <BusinessCard
-                                    key={
-                                        business.id
+                    {/* ---------------------------------------------------- */}
+                    {/* Filtered Results */}
+                    {/* ---------------------------------------------------- */}
+
+                    {filteredBusinesses.length === 0 ? (
+                        <div
+                            className={`
+                                rounded-[10px]
+                                border
+                                px-6
+                                py-12
+                                text-center
+                                ${
+                                    isDark
+                                        ? "border-[#242424] bg-[#0f0f0f]"
+                                        : "border-[#dedede] bg-white"
+                                }
+                            `}
+                        >
+                            <SearchX
+                                size={22}
+                                strokeWidth={1.7}
+                                className={
+                                    isDark
+                                        ? "mx-auto text-white"
+                                        : "mx-auto text-[#555]"
+                                }
+                            />
+
+                            <p
+                                className={`
+                                    mt-4
+                                    text-[14px]
+                                    font-medium
+                                    ${
+                                        isDark
+                                            ? "text-white"
+                                            : "text-[#171717]"
                                     }
-                                    business={
-                                        business
+                                `}
+                            >
+                                No businesses found
+                            </p>
+
+                            <p
+                                className={`
+                                    mt-1
+                                    text-[12px]
+                                    ${
+                                        isDark
+                                            ? "text-white"
+                                            : "text-[#777]"
                                     }
-                                    theme={
-                                        theme
-                                    }
-                                    onClick={
-                                        onBusinessClick
-                                    }
-                                    onSave={
-                                        onSaveLead
-                                    }
-                                    saved={savedLeads.includes(
-                                        Number(
+                                `}
+                            >
+                                Try a different business
+                                name.
+                            </p>
+                        </div>
+                    ) : (
+                        <div
+                            className="
+                                grid
+                                gap-4
+                                md:grid-cols-2
+                                xl:grid-cols-3
+                            "
+                        >
+                            {filteredBusinesses.map(
+                                (business) => (
+                                    <BusinessCard
+                                        key={
                                             business.id
-                                        )
-                                    )}
-                                    saving={
-                                        savingLeadId ===
-                                        business.id
-                                    }
-                                />
-                            )
-                        )}
-                    </div>
+                                        }
+                                        business={
+                                            business
+                                        }
+                                        theme={
+                                            theme
+                                        }
+                                        onClick={
+                                            onBusinessClick
+                                        }
+                                        onSave={
+                                            onSaveLead
+                                        }
+                                        saved={savedLeads.includes(
+                                            Number(
+                                                business.id
+                                            )
+                                        )}
+                                        saving={
+                                            savingLeadId ===
+                                            business.id
+                                        }
+                                    />
+                                )
+                            )}
+                        </div>
+                    )}
 
                 </div>
             )}
 
-            {/* ------------------------------------------------------------ */}
-            {/* Business Opportunities View */}
-            {/* ------------------------------------------------------------ */}
+       {/* ------------------------------------------------------------ */}
+{/* Business Opportunities View */}
+{/* ------------------------------------------------------------ */}
 
-            {activeView === "opportunities" && (
-                <div className="space-y-4">
+{activeView === "opportunities" && (
+    <div className="space-y-6">
 
-                    {!activeOpportunity && (
-                        <>
-                            <div
+        {/* ---------------------------------------------------- */}
+        {/* Opportunity Header */}
+        {/* ---------------------------------------------------- */}
+
+        <div
+            className={`
+                border-b
+                pb-4
+                ${
+                    isDark
+                        ? "border-[#242424]"
+                        : "border-[#dedede]"
+                }
+            `}
+        >
+            <h3
+                className={`
+                    text-[16px]
+                    font-semibold
+                    tracking-[-0.02em]
+                    ${
+                        isDark
+                            ? "text-white"
+                            : "text-[#171717]"
+                    }
+                `}
+            >
+                Business Opportunities
+            </h3>
+
+            <p
+                className={`
+                    mt-1
+                    text-[12px]
+                    ${
+                        isDark
+                            ? "text-white"
+                            : "text-[#777]"
+                    }
+                `}
+            >
+                Compare businesses with and without websites
+                across your selected areas.
+            </p>
+        </div>
+
+
+        {/* ---------------------------------------------------- */}
+        {/* Market Summary */}
+        {/* ---------------------------------------------------- */}
+
+        <div
+            className="
+                grid
+                gap-3
+                sm:grid-cols-2
+                xl:grid-cols-4
+            "
+        >
+
+            {[
+                {
+                    label: "Total Businesses",
+                    value: totalBusinesses,
+                },
+                {
+                    label: "With Website",
+                    value: businessesWithWebsite,
+                },
+                {
+                    label: "Without Website",
+                    value: businessesWithoutWebsite,
+                },
+                {
+                    label: "Website Opportunity",
+                    value:
+                        totalBusinesses > 0
+                            ? `${(
+                                  (businessesWithoutWebsite /
+                                      totalBusinesses) *
+                                  100
+                              ).toFixed(1)}%`
+                            : "0%",
+                },
+            ].map((item) => (
+                <div
+                    key={item.label}
+                    className={`
+                        rounded-[10px]
+                        border
+                        p-4
+                        ${
+                            isDark
+                                ? "border-[#242424] bg-[#0f0f0f]"
+                                : "border-[#dedede] bg-white"
+                        }
+                    `}
+                >
+
+                    <div
+                        className={`
+                            text-[11px]
+                            font-medium
+                            uppercase
+                            tracking-[0.06em]
+                            ${
+                                isDark
+                                    ? "text-[#777]"
+                                    : "text-[#888]"
+                            }
+                        `}
+                    >
+                        {item.label}
+                    </div>
+
+                    <div
+                        className={`
+                            mt-2
+                            text-[24px]
+                            font-semibold
+                            tracking-[-0.04em]
+                            ${
+                                isDark
+                                    ? "text-white"
+                                    : "text-[#171717]"
+                            }
+                        `}
+                    >
+                        {item.value}
+                    </div>
+
+                </div>
+            ))}
+
+        </div>
+
+
+  {/* ------------------------------------------------------------ */}
+{/* Website Coverage */}
+{/* ------------------------------------------------------------ */}
+
+<div
+    className={`
+        rounded-[10px]
+        border
+        p-5
+        ${
+            isDark
+                ? "border-[#242424] bg-[#0f0f0f]"
+                : "border-[#dedede] bg-white"
+        }
+    `}
+>
+
+    <div>
+
+        <h4
+            className={`
+                text-[14px]
+                font-semibold
+                ${
+                    isDark
+                        ? "text-white"
+                        : "text-[#171717]"
+                }
+            `}
+        >
+            Website Coverage
+        </h4>
+
+        <p
+            className={`
+                mt-1
+                text-[12px]
+                ${
+                    isDark
+                        ? "text-white"
+                        : "text-[#777]"
+                }
+            `}
+        >
+            Quick view of website availability in the
+            discovered market.
+        </p>
+
+    </div>
+
+
+    <div
+        className="
+            mt-5
+            grid
+            gap-3
+            sm:grid-cols-2
+        "
+    >
+
+        {/* With Website */}
+
+        <div
+            className={`
+                rounded-lg
+                border
+                p-4
+                ${
+                    isDark
+                        ? "border-[#242424] bg-[#111111]"
+                        : "border-[#e5e5e5] bg-[#fafafa]"
+                }
+            `}
+        >
+
+            <div className="flex items-center justify-between">
+
+                <div
+                    className={`
+                        text-[11px]
+                        font-medium
+                        ${
+                            isDark
+                                ? "text-white"
+                                : "text-[#666]"
+                        }
+                    `}
+                >
+                    With Website
+                </div>
+
+                <span
+                    className="
+                        h-2
+                        w-2
+                        rounded-full
+                        bg-emerald-500
+                    "
+                />
+
+            </div>
+
+
+            <div
+                className={`
+                    mt-2
+                    text-[24px]
+                    font-semibold
+                    tracking-[-0.04em]
+                    ${
+                        isDark
+                            ? "text-white"
+                            : "text-[#171717]"
+                    }
+                `}
+            >
+                {businessesWithWebsite}
+            </div>
+
+
+            <div
+                className={`
+                    mt-1
+                    text-[11px]
+                    ${
+                        isDark
+                            ? "text-white"
+                            : "text-[#777]"
+                    }
+                `}
+            >
+                {totalBusinesses > 0
+                    ? (
+                          (businessesWithWebsite /
+                              totalBusinesses) *
+                          100
+                      ).toFixed(1)
+                    : "0.0"}
+                % of businesses
+            </div>
+
+        </div>
+
+
+        {/* Without Website */}
+
+        <div
+            className={`
+                rounded-lg
+                border
+                p-4
+                ${
+                    isDark
+                        ? "border-[#242424] bg-[#111111]"
+                        : "border-[#e5e5e5] bg-[#fafafa]"
+                }
+            `}
+        >
+
+            <div className="flex items-center justify-between">
+
+                <div
+                    className={`
+                        text-[11px]
+                        font-medium
+                        ${
+                            isDark
+                                ? "text-white"
+                                : "text-[#666]"
+                        }
+                    `}
+                >
+                    Without Website
+                </div>
+
+                <span
+                    className="
+                        h-2
+                        w-2
+                        rounded-full
+                        bg-orange-500
+                    "
+                />
+
+            </div>
+
+
+            <div
+                className={`
+                    mt-2
+                    text-[24px]
+                    font-semibold
+                    tracking-[-0.04em]
+                    ${
+                        isDark
+                            ? "text-white"
+                            : "text-[#171717]"
+                    }
+                `}
+            >
+                {businessesWithoutWebsite}
+            </div>
+
+
+            <div
+                className={`
+                    mt-1
+                    text-[11px]
+                    ${
+                        isDark
+                            ? "text-white"
+                            : "text-[#777]"
+                    }
+                `}
+            >
+                {totalBusinesses > 0
+                    ? (
+                          (businessesWithoutWebsite /
+                              totalBusinesses) *
+                          100
+                      ).toFixed(1)
+                    : "0.0"}
+                % website opportunity
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+        {/* ---------------------------------------------------- */}
+        {/* Area Comparison */}
+        {/* ---------------------------------------------------- */}
+
+        <div
+            className={`
+                rounded-[10px]
+                border
+                p-5
+                ${
+                    isDark
+                        ? "border-[#242424] bg-[#0f0f0f]"
+                        : "border-[#dedede] bg-white"
+                }
+            `}
+        >
+
+            <div>
+
+                <h4
+                    className={`
+                        text-[14px]
+                        font-semibold
+                        ${
+                            isDark
+                                ? "text-white"
+                                : "text-[#171717]"
+                        }
+                    `}
+                >
+                    Area Comparison
+                </h4>
+
+                <p
+                    className={`
+                        mt-1
+                        text-[12px]
+                        ${
+                            isDark
+                                ? "text-white"
+                                : "text-[#777]"
+                        }
+                    `}
+                >
+                    Compare website availability and website
+                    opportunity across your selected areas.
+                </p>
+
+            </div>
+
+
+            {discoveredAreas.length > 0 ? (
+
+                <div className="mt-6 min-w-[700px]">
+
+                    <table
+                        className="
+                            w-full
+                            min-w-[700px]
+                            border-collapse
+                        "
+                    >
+
+                        <thead>
+
+                            <tr
                                 className={`
                                     border-b
-                                    pb-4
                                     ${
                                         isDark
-                                            ? "border-[#242424]"
-                                            : "border-[#dedede]"
+                                            ? "border-[#292929]"
+                                            : "border-[#e5e5e5]"
                                     }
                                 `}
                             >
-                                <h3
+
+                                <th
                                     className={`
-                                        text-[16px]
+                                        px-3
+                                        pb-3
+                                        text-left
+                                        text-[10px]
+                                        font-medium
+                                        uppercase
+                                        tracking-[0.06em]
+                                        ${
+                                            isDark
+                                                ? "text-[#777]"
+                                                : "text-[#888]"
+                                        }
+                                    `}
+                                >
+                                    Area
+                                </th>
+
+                                <th
+                                    className={`
+                                        px-3
+                                        pb-3
+                                        text-left
+                                        text-[10px]
+                                        font-medium
+                                        uppercase
+                                        tracking-[0.06em]
+                                        ${
+                                            isDark
+                                                ? "text-[#777]"
+                                                : "text-[#888]"
+                                        }
+                                    `}
+                                >
+                                    Total
+                                </th>
+
+                                <th
+                                    className={`
+                                        px-3
+                                        pb-3
+                                        text-left
+                                        text-[10px]
+                                        font-medium
+                                        uppercase
+                                        tracking-[0.06em]
+                                        ${
+                                            isDark
+                                                ? "text-[#777]"
+                                                : "text-[#888]"
+                                        }
+                                    `}
+                                >
+                                    With Website
+                                </th>
+
+                                <th
+                                    className={`
+                                        px-3
+                                        pb-3
+                                        text-left
+                                        text-[10px]
+                                        font-medium
+                                        uppercase
+                                        tracking-[0.06em]
+                                        ${
+                                            isDark
+                                                ? "text-[#777]"
+                                                : "text-[#888]"
+                                        }
+                                    `}
+                                >
+                                    Without Website
+                                </th>
+
+                                <th
+                                    className={`
+                                        px-3
+                                        pb-3
+                                        text-left
+                                        text-[10px]
+                                        font-medium
+                                        uppercase
+                                        tracking-[0.06em]
+                                        ${
+                                            isDark
+                                                ? "text-[#777]"
+                                                : "text-[#888]"
+                                        }
+                                    `}
+                                >
+                                    Website %
+                                </th>
+
+                                <th
+                                    className={`
+                                        px-3
+                                        pb-3
+                                        text-left
+                                        text-[10px]
+                                        font-medium
+                                        uppercase
+                                        tracking-[0.06em]
+                                        ${
+                                            isDark
+                                                ? "text-[#777]"
+                                                : "text-[#888]"
+                                        }
+                                    `}
+                                >
+                                    Opportunity %
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {discoveredAreas.map(
+                                ([area, total]) => {
+
+                                    const areaBusinesses =
+                                        businesses.filter(
+                                            (business) =>
+                                                business.area ===
+                                                area
+                                        );
+
+                                    const withWebsite =
+                                        areaBusinesses.filter(
+                                            (business) =>
+                                                Boolean(
+                                                    business.website
+                                                )
+                                        ).length;
+
+                                    const withoutWebsite =
+                                        areaBusinesses.length -
+                                        withWebsite;
+
+                                    const websitePercentage =
+                                        total > 0
+                                            ? (
+                                                  (withWebsite /
+                                                      total) *
+                                                  100
+                                              ).toFixed(1)
+                                            : "0.0";
+
+                                    const opportunityPercentage =
+                                        total > 0
+                                            ? (
+                                                  (withoutWebsite /
+                                                      total) *
+                                                  100
+                                              ).toFixed(1)
+                                            : "0.0";
+
+                                    return (
+                                        <tr
+                                            key={area}
+                                            className={`
+                                                border-b
+                                                last:border-b-0
+                                                ${
+                                                    isDark
+                                                        ? "border-[#1f1f1f]"
+                                                        : "border-[#eeeeee]"
+                                                }
+                                            `}
+                                        >
+
+                                            <td
+                                                className={`
+                                                    px-3
+                                                    py-4
+                                                    text-[12px]
+                                                    font-medium
+                                                    ${
+                                                        isDark
+                                                            ? "text-white"
+                                                            : "text-[#333]"
+                                                    }
+                                                `}
+                                            >
+                                          <div
+    className={`
+        flex
+        min-w-0
+        items-center
+        gap-2.5
+        rounded-[10px]
+        border
+        px-3
+        py-2.5
+        transition-colors
+        duration-200
+        sm:gap-3
+        sm:px-4
+        sm:py-3
+        ${
+            isDark
+                ? "border-[#292929] bg-[#0f0f0f]"
+                : "border-[#dedede] bg-white"
+        }
+    `}
+>
+                                                    <MapPin
+                                                        size={13}
+                                                        strokeWidth={1.7}
+                                                        className={
+                                                            isDark
+                                                                ? "text-white"
+                                                                : "text-[#888]"
+                                                        }
+                                                    />
+
+                                                    {area}
+                                                </div>
+                                            </td>
+
+
+                                            <td
+                                                className={`
+                                                    px-3
+                                                    py-4
+                                                    text-[12px]
+                                                    ${
+                                                        isDark
+                                                            ? "text-white"
+                                                            : "text-[#555]"
+                                                    }
+                                                `}
+                                            >
+                                                {total}
+                                            </td>
+
+
+                                            <td
+                                                className={`
+                                                    px-3
+                                                    py-4
+                                                    text-[12px]
+                                                    ${
+                                                        isDark
+                                                            ? "text-white"
+                                                            : "text-[#555]"
+                                                    }
+                                                `}
+                                            >
+                                                {withWebsite}
+                                            </td>
+
+
+                                            <td
+                                                className={`
+                                                    px-3
+                                                    py-4
+                                                    text-[12px]
+                                                    font-medium
+                                                    ${
+                                                        isDark
+                                                            ? "text-white"
+                                                            : "text-[#333]"
+                                                    }
+                                                `}
+                                            >
+                                                {withoutWebsite}
+                                            </td>
+
+
+                                            <td
+                                                className={`
+                                                    px-3
+                                                    py-4
+                                                    text-[12px]
+                                                    ${
+                                                        isDark
+                                                            ? "text-white"
+                                                            : "text-[#555]"
+                                                    }
+                                                `}
+                                            >
+                                                {websitePercentage}%
+                                            </td>
+
+
+                                            <td
+                                                className={`
+                                                    px-3
+                                                    py-4
+                                                    text-[12px]
+                                                    font-medium
+                                                    ${
+                                                        isDark
+                                                            ? "text-white"
+                                                            : "text-[#333]"
+                                                    }
+                                                `}
+                                            >
+                                                {opportunityPercentage}%
+                                            </td>
+
+                                        </tr>
+                                    );
+
+                                }
+                            )}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            ) : (
+
+                <div
+                    className={`
+                        mt-6
+                        rounded-lg
+                        border
+                        px-4
+                        py-8
+                        text-center
+                        text-[12px]
+                        ${
+                            isDark
+                                ? "border-[#242424] text-white"
+                                : "border-[#e2e2e2] text-[#777]"
+                        }
+                    `}
+                >
+                    No area-specific data is available for this
+                    search.
+                </div>
+
+            )}
+
+        </div>
+
+
+     {/* ------------------------------------------------------------ */}
+{/* Website Opportunity by Area */}
+{/* ------------------------------------------------------------ */}
+
+{discoveredAreas.length > 0 && (
+
+    <div
+        className={`
+            rounded-[10px]
+            border
+            p-5
+            ${
+                isDark
+                    ? "border-[#242424] bg-[#0f0f0f]"
+                    : "border-[#dedede] bg-white"
+            }
+        `}
+    >
+
+        <div>
+
+            <h4
+                className={`
+                    text-[14px]
+                    font-semibold
+                    ${
+                        isDark
+                            ? "text-white"
+                            : "text-[#171717]"
+                    }
+                `}
+            >
+                Website Opportunity by Area
+            </h4>
+
+            <p
+                className={`
+                    mt-1
+                    text-[12px]
+                    ${
+                        isDark
+                            ? "text-white"
+                            : "text-[#777]"
+                    }
+                `}
+            >
+                See the website gap in each area at a glance.
+            </p>
+
+        </div>
+
+
+        <div
+            className="
+                mt-6
+                grid
+                gap-5
+                sm:grid-cols-2
+                lg:grid-cols-3
+            "
+        >
+
+            {discoveredAreas.map(
+                ([area, total]) => {
+
+                    const areaBusinesses =
+                        businesses.filter(
+                            (business) =>
+                                business.area === area
+                        );
+
+                    const withWebsite =
+                        areaBusinesses.filter(
+                            (business) =>
+                                Boolean(
+                                    business.website
+                                )
+                        ).length;
+
+                    const withoutWebsite =
+                        areaBusinesses.length -
+                        withWebsite;
+
+                    const opportunityPercentage =
+                        total > 0
+                            ? (withoutWebsite / total) *
+                              100
+                            : 0;
+
+                    const websitePercentage =
+                        total > 0
+                            ? (withWebsite / total) *
+                              100
+                            : 0;
+
+                    return (
+                        <div
+                            key={area}
+                            className={`
+                                rounded-lg
+                                border
+                                p-5
+                                ${
+                                    isDark
+                                        ? "border-[#242424] bg-[#111111]"
+                                        : "border-[#e5e5e5] bg-[#fafafa]"
+                                }
+                            `}
+                        >
+
+                            {/* Area Name */}
+
+                            <div
+                                className="
+                                    flex
+                                    items-center
+                                    justify-between
+                                    gap-3
+                                "
+                            >
+
+                                <div
+                                    className={`
+                                        flex
+                                        min-w-0
+                                        items-center
+                                        gap-2
+                                        text-[12px]
+                                        font-medium
+                                        ${
+                                            isDark
+                                                ? "text-white"
+                                                : "text-[#333]"
+                                        }
+                                    `}
+                                >
+
+                                    <MapPin
+                                        size={13}
+                                        strokeWidth={1.7}
+                                        className="shrink-0"
+                                    />
+
+                                    <span className="truncate">
+                                        {area}
+                                    </span>
+
+                                </div>
+
+
+                                <span
+                                    className={`
+                                        shrink-0
+                                        text-[10px]
+                                        ${
+                                            isDark
+                                                ? "text-white"
+                                                : "text-[#777]"
+                                        }
+                                    `}
+                                >
+                                    {total} total
+                                </span>
+
+                            </div>
+
+
+                            {/* Circle */}
+
+                            <div
+                                className="
+                                    mt-5
+                                    flex
+                                    justify-center
+                                "
+                            >
+
+                                <div
+                                    className="
+                                        relative
+                                        h-36
+                                        w-36
+                                        rounded-full
+                                    "
+                                    style={{
+                                        background: `conic-gradient(
+                                            rgb(249 115 22) 0% ${opportunityPercentage}%,
+                                            rgb(16 185 129) ${opportunityPercentage}% 100%
+                                        )`,
+                                    }}
+                                >
+
+                                    {/* Inner Circle */}
+
+                                    <div
+                                        className={`
+                                            absolute
+                                            inset-[10px]
+                                            flex
+                                            flex-col
+                                            items-center
+                                            justify-center
+                                            rounded-full
+                                            ${
+                                                isDark
+                                                    ? "bg-[#111111]"
+                                                    : "bg-[#fafafa]"
+                                            }
+                                        `}
+                                    >
+
+                                        <span
+                                            className={`
+                                                text-[25px]
+                                                font-semibold
+                                                tracking-[-0.04em]
+                                                ${
+                                                    isDark
+                                                        ? "text-white"
+                                                        : "text-[#171717]"
+                                                }
+                                            `}
+                                        >
+                                            {opportunityPercentage.toFixed(
+                                                0
+                                            )}
+                                            %
+                                        </span>
+
+                                        <span
+                                            className={`
+                                                mt-0.5
+                                                text-[10px]
+                                                ${
+                                                    isDark
+                                                        ? "text-white"
+                                                        : "text-[#777]"
+                                                }
+                                            `}
+                                        >
+                                            no website
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            {/* Stats */}
+
+                            <div
+                                className="
+                                    mt-5
+                                    grid
+                                    grid-cols-2
+                                    gap-2
+                                "
+                            >
+
+                                <div
+                                    className={`
+                                        rounded-md
+                                        border
+                                        px-3
+                                        py-2.5
+                                        ${
+                                            isDark
+                                                ? "border-[#242424]"
+                                                : "border-[#e5e5e5]"
+                                        }
+                                    `}
+                                >
+
+                                    <div
+                                        className={`
+                                            text-[10px]
+                                            ${
+                                                isDark
+                                                    ? "text-white"
+                                                    : "text-[#777]"
+                                            }
+                                        `}
+                                    >
+                                        With Website
+                                    </div>
+
+                                    <div
+                                        className={`
+                                            mt-1
+                                            text-[15px]
+                                            font-semibold
+                                            ${
+                                                isDark
+                                                    ? "text-white"
+                                                    : "text-[#333]"
+                                            }
+                                        `}
+                                    >
+                                        {withWebsite}
+                                    </div>
+
+                                    <div
+                                        className="
+                                            mt-0.5
+                                            text-[10px]
+                                            text-emerald-500
+                                        "
+                                    >
+                                        {websitePercentage.toFixed(
+                                            1
+                                        )}
+                                        %
+                                    </div>
+
+                                </div>
+
+
+                                <div
+                                    className={`
+                                        rounded-md
+                                        border
+                                        px-3
+                                        py-2.5
+                                        ${
+                                            isDark
+                                                ? "border-[#242424]"
+                                                : "border-[#e5e5e5]"
+                                        }
+                                    `}
+                                >
+
+                                    <div
+                                        className={`
+                                            text-[10px]
+                                            ${
+                                                isDark
+                                                    ? "text-white"
+                                                    : "text-[#777]"
+                                            }
+                                        `}
+                                    >
+                                        No Website
+                                    </div>
+
+                                    <div
+                                        className={`
+                                            mt-1
+                                            text-[15px]
+                                            font-semibold
+                                            ${
+                                                isDark
+                                                    ? "text-white"
+                                                    : "text-[#333]"
+                                            }
+                                        `}
+                                    >
+                                        {withoutWebsite}
+                                    </div>
+
+                                    <div
+                                        className="
+                                            mt-0.5
+                                            text-[10px]
+                                            text-orange-500
+                                        "
+                                    >
+                                        {opportunityPercentage.toFixed(
+                                            1
+                                        )}
+                                        %
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            {/* Legend */}
+
+                            <div
+                                className="
+                                    mt-4
+                                    flex
+                                    items-center
+                                    justify-center
+                                    gap-4
+                                "
+                            >
+
+                                <div
+                                    className="
+                                        flex
+                                        items-center
+                                        gap-1.5
+                                    "
+                                >
+
+                                    <span
+                                        className="
+                                            h-2
+                                            w-2
+                                            rounded-full
+                                            bg-emerald-500
+                                        "
+                                    />
+
+                                    <span
+                                        className={`
+                                            text-[10px]
+                                            ${
+                                                isDark
+                                                    ? "text-white"
+                                                    : "text-[#777]"
+                                            }
+                                        `}
+                                    >
+                                        Website
+                                    </span>
+
+                                </div>
+
+
+                                <div
+                                    className="
+                                        flex
+                                        items-center
+                                        gap-1.5
+                                    "
+                                >
+
+                                    <span
+                                        className="
+                                            h-2
+                                            w-2
+                                            rounded-full
+                                            bg-orange-500
+                                        "
+                                    />
+
+                                    <span
+                                        className={`
+                                            text-[10px]
+                                            ${
+                                                isDark
+                                                    ? "text-white"
+                                                    : "text-[#777]"
+                                            }
+                                        `}
+                                    >
+                                        Opportunity
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+                    );
+
+                }
+            )}
+
+        </div>
+
+    </div>
+
+)}
+
+
+   {/* ------------------------------------------------------------ */}
+{/* Business Classification */}
+{/* ------------------------------------------------------------ */}
+
+<div
+    className={`
+        rounded-[10px]
+        border
+        p-5
+        ${
+            isDark
+                ? "border-[#242424] bg-[#0f0f0f]"
+                : "border-[#dedede] bg-white"
+        }
+    `}
+>
+
+    <div>
+
+        <h4
+            className={`
+                text-[14px]
+                font-semibold
+                ${
+                    isDark
+                        ? "text-white"
+                        : "text-[#171717]"
+                }
+            `}
+        >
+            Business Classification
+        </h4>
+
+        <p
+            className={`
+                mt-1
+                text-[12px]
+                ${
+                    isDark
+                        ? "text-white"
+                        : "text-[#777]"
+                }
+            `}
+        >
+            Select an area to quickly view its website
+            opportunity.
+        </p>
+
+    </div>
+
+
+    {/* Area Selector */}
+
+    <div className="mt-5 flex flex-wrap gap-2">
+
+        <button
+            type="button"
+            onClick={() =>
+                setActiveOpportunity("all")
+            }
+            className={`
+                rounded-md
+                border
+                px-3
+                py-2
+                text-[11px]
+                font-medium
+                ${
+                    activeOpportunity === "all"
+                        ? isDark
+                            ? "border-[#555] bg-[#202020] text-white"
+                            : "border-[#cfcfcf] bg-[#f2f2f2] text-[#171717]"
+                        : isDark
+                            ? "border-[#292929] text-white"
+                            : "border-[#dedede] text-[#666]"
+                }
+            `}
+        >
+            All Areas
+        </button>
+
+
+        {discoveredAreas.map(
+            ([area]) => (
+                <button
+                    key={area}
+                    type="button"
+                    onClick={() =>
+                        setActiveOpportunity(
+                            area
+                        )
+                    }
+                    className={`
+                        rounded-md
+                        border
+                        px-3
+                        py-2
+                        text-[11px]
+                        font-medium
+                        ${
+                            activeOpportunity ===
+                            area
+                                ? isDark
+                                    ? "border-[#555] bg-[#202020] text-white"
+                                    : "border-[#cfcfcf] bg-[#f2f2f2] text-[#171717]"
+                                : isDark
+                                    ? "border-[#292929] text-white"
+                                    : "border-[#dedede] text-[#666]"
+                        }
+                    `}
+                >
+                    {area}
+                </button>
+            )
+        )}
+
+    </div>
+
+
+    {/* Classification Cards */}
+
+    {(() => {
+
+        const selectedArea =
+            activeOpportunity !== "all"
+                ? activeOpportunity
+                : null;
+
+        const selectedBusinesses =
+            selectedArea
+                ? businesses.filter(
+                      (business) =>
+                          business.area ===
+                          selectedArea
+                  )
+                : businesses;
+
+        const withWebsite =
+            selectedBusinesses.filter(
+                (business) =>
+                    Boolean(
+                        business.website
+                    )
+            );
+
+        const withoutWebsite =
+            selectedBusinesses.filter(
+                (business) =>
+                    !business.website
+            );
+
+        return (
+            <div
+                className="
+                    mt-5
+                    grid
+                    gap-3
+                    sm:grid-cols-2
+                "
+            >
+
+                {/* With Website */}
+
+                <button
+                    type="button"
+                    onClick={() => {
+                        if (
+                            withWebsite.length ===
+                            1
+                        ) {
+                            onBusinessClick(
+                                withWebsite[0].id
+                            );
+                        }
+                    }}
+                    className={`
+                        rounded-lg
+                        border
+                        p-4
+                        text-left
+                        transition-colors
+                        ${
+                            isDark
+                                ? "border-[#242424] bg-[#111111] hover:bg-[#181818]"
+                                : "border-[#e5e5e5] bg-[#fafafa] hover:bg-white"
+                        }
+                        ${
+                            withWebsite.length ===
+                            1
+                                ? "cursor-pointer"
+                                : "cursor-default"
+                        }
+                    `}
+                >
+
+                    <div
+                        className="
+                            flex
+                            items-center
+                            justify-between
+                        "
+                    >
+
+                        <div
+                            className={`
+                                text-[11px]
+                                font-medium
+                                ${
+                                    isDark
+                                        ? "text-white"
+                                        : "text-[#666]"
+                                }
+                            `}
+                        >
+                            With Website
+                        </div>
+
+                        <span
+                            className="
+                                h-2
+                                w-2
+                                rounded-full
+                                bg-emerald-500
+                            "
+                        />
+
+                    </div>
+
+
+                    <div
+                        className={`
+                            mt-2
+                            text-[26px]
+                            font-semibold
+                            tracking-[-0.04em]
+                            ${
+                                isDark
+                                    ? "text-white"
+                                    : "text-[#171717]"
+                            }
+                        `}
+                    >
+                        {withWebsite.length}
+                    </div>
+
+
+                    <div
+                        className={`
+                            mt-1
+                            text-[10px]
+                            ${
+                                isDark
+                                    ? "text-white"
+                                    : "text-[#777]"
+                            }
+                        `}
+                    >
+                        businesses
+                    </div>
+
+                </button>
+
+
+                {/* Without Website */}
+
+                <button
+                    type="button"
+                    onClick={() => {
+                        if (
+                            withoutWebsite.length ===
+                            1
+                        ) {
+                            onBusinessClick(
+                                withoutWebsite[0].id
+                            );
+                        }
+                    }}
+                    className={`
+                        rounded-lg
+                        border
+                        p-4
+                        text-left
+                        transition-colors
+                        ${
+                            isDark
+                                ? "border-[#242424] bg-[#111111] hover:bg-[#181818]"
+                                : "border-[#e5e5e5] bg-[#fafafa] hover:bg-white"
+                        }
+                        ${
+                            withoutWebsite.length ===
+                            1
+                                ? "cursor-pointer"
+                                : "cursor-default"
+                        }
+                    `}
+                >
+
+                    <div
+                        className="
+                            flex
+                            items-center
+                            justify-between
+                        "
+                    >
+
+                        <div
+                            className={`
+                                text-[11px]
+                                font-medium
+                                ${
+                                    isDark
+                                        ? "text-white"
+                                        : "text-[#666]"
+                                }
+                            `}
+                        >
+                            Without Website
+                        </div>
+
+                        <span
+                            className="
+                                h-2
+                                w-2
+                                rounded-full
+                                bg-orange-500
+                            "
+                        />
+
+                    </div>
+
+
+                    <div
+                        className={`
+                            mt-2
+                            text-[26px]
+                            font-semibold
+                            tracking-[-0.04em]
+                            ${
+                                isDark
+                                    ? "text-white"
+                                    : "text-[#171717]"
+                            }
+                        `}
+                    >
+                        {withoutWebsite.length}
+                    </div>
+
+
+                    <div
+                        className={`
+                            mt-1
+                            text-[10px]
+                            ${
+                                isDark
+                                    ? "text-white"
+                                    : "text-[#777]"
+                            }
+                        `}
+                    >
+                        businesses
+                    </div>
+
+                </button>
+
+            </div>
+        );
+
+    })()}
+
+</div>
+
+
+    {/* ------------------------------------------------------------ */}
+{/* Area-wise Business Classification */}
+{/* ------------------------------------------------------------ */}
+
+{discoveredAreas.length > 0 && (
+
+    <div className="space-y-4">
+
+        {discoveredAreas
+            .filter(([area]) => {
+                // "all" means show every area
+                if (activeOpportunity === "all") {
+                    return true;
+                }
+
+                // Otherwise show only selected area
+                return activeOpportunity === area;
+            })
+            .map(([area, total]) => {
+
+                const areaBusinesses =
+                    businesses.filter(
+                        (business) =>
+                            business.area === area
+                    );
+
+                const withWebsite =
+                    areaBusinesses.filter(
+                        (business) =>
+                            Boolean(
+                                business.website
+                            )
+                    );
+
+                const withoutWebsite =
+                    areaBusinesses.filter(
+                        (business) =>
+                            !business.website
+                    );
+
+                return (
+                    <div
+                        key={area}
+                        className={`
+                            rounded-[10px]
+                            border
+                            p-5
+                            ${
+                                isDark
+                                    ? "border-[#242424] bg-[#0f0f0f]"
+                                    : "border-[#dedede] bg-white"
+                            }
+                        `}
+                    >
+
+                        {/* Area Header */}
+
+                        <div
+                            className="
+                                flex
+                                items-start
+                                justify-between
+                                gap-4
+                            "
+                        >
+
+                            <div>
+
+                                <h4
+                                    className={`
+                                        flex
+                                        items-center
+                                        gap-2
+                                        text-[14px]
                                         font-semibold
-                                        tracking-[-0.02em]
                                         ${
                                             isDark
                                                 ? "text-white"
@@ -630,625 +2520,468 @@ function SearchResults({
                                         }
                                     `}
                                 >
-                                    Business Opportunities
-                                </h3>
+
+                                    <MapPin
+                                        size={14}
+                                        strokeWidth={1.7}
+                                    />
+
+                                    {area}
+
+                                </h4>
+
 
                                 <p
                                     className={`
                                         mt-1
-                                        text-[12px]
+                                        text-[11px]
                                         ${
                                             isDark
-                                                ? "text-[#666]"
+                                                ? "text-white"
                                                 : "text-[#777]"
                                         }
                                     `}
                                 >
-                                    Explore business
-                                    opportunities identified
-                                    from your search results.
+                                    {total}{" "}
+                                    {total === 1
+                                        ? "business"
+                                        : "businesses"}
                                 </p>
+
                             </div>
 
-                            <div className="space-y-2">
 
-                                {opportunityMenu.map(
-                                    (item) => {
-                                        const Icon =
-                                            item.icon;
+                            <div
+                                className={`
+                                    text-right
+                                    text-[11px]
+                                    ${
+                                        isDark
+                                            ? "text-white"
+                                            : "text-[#777]"
+                                    }
+                                `}
+                            >
 
-                                        return (
-                                            <button
-                                                key={
-                                                    item.id
-                                                }
-                                                type="button"
-                                                onClick={() =>
-                                                    setActiveOpportunity(
-                                                        item.id
-                                                    )
-                                                }
-                                                className={`
-                                                    group
-                                                    flex
-                                                    w-full
-                                                    items-center
-                                                    justify-between
-                                                    rounded-[10px]
-                                                    border
-                                                    px-4
-                                                    py-4
-                                                    text-left
-                                                    transition-colors
-                                                    ${
-                                                        isDark
-                                                            ? "border-[#242424] bg-[#0f0f0f] hover:border-[#383838] hover:bg-[#141414]"
-                                                            : "border-[#dedede] bg-white hover:border-[#cfcfcf] hover:bg-[#fafafa]"
+                                <div>
+                                    {withoutWebsite.length}{" "}
+                                    without website
+                                </div>
+
+                                <div className="mt-1">
+                                    {withWebsite.length}{" "}
+                                    with website
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        {/* Business Classification */}
+
+                        <div
+                            className="
+                                mt-5
+                                grid
+                                gap-5
+                                lg:grid-cols-2
+                            "
+                        >
+
+                            {/* ------------------------------------------------ */}
+                            {/* With Website */}
+                            {/* ------------------------------------------------ */}
+
+                            <div>
+
+                                <div
+                                    className="
+                                        mb-3
+                                        flex
+                                        items-center
+                                        justify-between
+                                    "
+                                >
+
+                                    <div
+                                        className={`
+                                            flex
+                                            items-center
+                                            gap-2
+                                            text-[11px]
+                                            font-medium
+                                            ${
+                                                isDark
+                                                    ? "text-white"
+                                                    : "text-[#555]"
+                                            }
+                                        `}
+                                    >
+
+                                        <span
+                                            className="
+                                                h-2
+                                                w-2
+                                                rounded-full
+                                                bg-emerald-500
+                                            "
+                                        />
+
+                                        With Website
+
+                                    </div>
+
+
+                                    <span
+                                        className={`
+                                            text-[11px]
+                                            ${
+                                                isDark
+                                                    ? "text-white"
+                                                    : "text-[#777]"
+                                            }
+                                        `}
+                                    >
+                                        {withWebsite.length}
+                                    </span>
+
+                                </div>
+
+
+                                <div className="space-y-2">
+
+                                    {withWebsite.length > 0 ? (
+
+                                        withWebsite.map(
+                                            (business) => (
+
+                                                <button
+                                                    key={
+                                                        business.id
                                                     }
-                                                `}
-                                            >
-                                                <div className="flex items-center gap-3">
+                                                    type="button"
+                                                    onClick={() =>
+                                                        onBusinessClick(
+                                                            business.id
+                                                        )
+                                                    }
+                                                    className={`
+                                                        flex
+                                                        w-full
+                                                        items-center
+                                                        justify-between
+                                                        gap-3
+                                                        rounded-lg
+                                                        border
+                                                        px-3
+                                                        py-3
+                                                        text-left
+                                                        transition-colors
+                                                        ${
+                                                            isDark
+                                                                ? "border-[#242424] hover:bg-[#151515]"
+                                                                : "border-[#e2e2e2] hover:bg-[#fafafa]"
+                                                        }
+                                                    `}
+                                                >
 
                                                     <div
-                                                        className={`
-                                                            flex
-                                                            h-9
-                                                            w-9
-                                                            items-center
-                                                            justify-center
-                                                            rounded-lg
-                                                            border
-                                                            ${
-                                                                isDark
-                                                                    ? "border-[#292929] bg-[#151515]"
-                                                                    : "border-[#e4e4e4] bg-[#fafafa]"
-                                                            }
-                                                        `}
+                                                        className="
+                                                            min-w-0
+                                                        "
                                                     >
-                                                        <Icon
-                                                            size={
-                                                                16
-                                                            }
-                                                            strokeWidth={
-                                                                1.7
-                                                            }
-                                                            className={
-                                                                isDark
-                                                                    ? "text-[#999]"
-                                                                    : "text-[#777]"
-                                                            }
-                                                        />
-                                                    </div>
-
-                                                    <div>
 
                                                         <div
                                                             className={`
-                                                                text-[13px]
+                                                                truncate
+                                                                text-[12px]
                                                                 font-medium
                                                                 ${
                                                                     isDark
-                                                                        ? "text-[#ddd]"
+                                                                        ? "text-white"
                                                                         : "text-[#333]"
                                                                 }
                                                             `}
                                                         >
                                                             {
-                                                                item.title
+                                                                business.business_name
                                                             }
                                                         </div>
 
+
                                                         <div
                                                             className={`
-                                                                mt-0.5
+                                                                mt-1
                                                                 text-[11px]
                                                                 ${
                                                                     isDark
-                                                                        ? "text-[#666]"
+                                                                        ? "text-white"
                                                                         : "text-[#777]"
                                                                 }
                                                             `}
                                                         >
-                                                            {
-                                                                item.description
-                                                            }
+                                                            {business.google_rating
+                                                                ? `${business.google_rating} rating`
+                                                                : "Rating unavailable"}
                                                         </div>
 
                                                     </div>
 
-                                                </div>
-
-                                                <div className="flex items-center gap-3">
-
-                                                    <span
-                                                        className={`
-                                                            text-[12px]
-                                                            ${
-                                                                isDark
-                                                                    ? "text-[#999]"
-                                                                    : "text-[#777]"
-                                                            }
-                                                        `}
-                                                    >
-                                                        {
-                                                            item.count
-                                                        }
-                                                    </span>
 
                                                     <ChevronRight
-                                                        size={
-                                                            16
+                                                        size={14}
+                                                        className={
+                                                            isDark
+                                                                ? "shrink-0 text-white"
+                                                                : "shrink-0 text-[#777]"
                                                         }
-                                                        strokeWidth={
-                                                            1.7
-                                                        }
-                                                        className={`
-                                                            transition-transform
-                                                            group-hover:translate-x-0.5
-                                                            ${
-                                                                isDark
-                                                                    ? "text-[#666]"
-                                                                    : "text-[#999]"
-                                                            }
-                                                        `}
                                                     />
 
-                                                </div>
+                                                </button>
 
-                                            </button>
-                                        );
-                                    }
-                                )}
-
-                            </div>
-                        </>
-                    )}
-
-                    {/* ---------------------------------------------------- */}
-                    {/* Opportunity Detail */}
-                    {/* ---------------------------------------------------- */}
-
-                    {activeOpportunity && (
-                        <div className="space-y-5">
-
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    setActiveOpportunity(
-                                        null
-                                    )
-                                }
-                                className={`
-                                    inline-flex
-                                    items-center
-                                    gap-2
-                                    text-[12px]
-                                    transition-colors
-                                    ${
-                                        isDark
-                                            ? "text-[#888] hover:text-white"
-                                            : "text-[#777] hover:text-[#171717]"
-                                    }
-                                `}
-                            >
-                                <ArrowLeft
-                                    size={14}
-                                    strokeWidth={1.8}
-                                />
-
-                                Back to opportunities
-                            </button>
-
-                            {activeOpportunity ===
-                                "website" && (
-                                <div
-                                    className={`
-                                        rounded-[10px]
-                                        border
-                                        p-5
-                                        ${
-                                            isDark
-                                                ? "border-[#242424] bg-[#0f0f0f]"
-                                                : "border-[#dedede] bg-white"
-                                        }
-                                    `}
-                                >
-                                    <div className="flex items-start justify-between">
-
-                                        <div>
-                                            <h3
-                                                className={`
-                                                    text-[16px]
-                                                    font-semibold
-                                                    ${
-                                                        isDark
-                                                            ? "text-white"
-                                                            : "text-[#171717]"
-                                                    }
-                                                `}
-                                            >
-                                                Website
-                                                Opportunities
-                                            </h3>
-
-                                            <p className="mt-1 text-[12px] text-[#777]">
-                                                Businesses
-                                                from this
-                                                search that
-                                                do not have
-                                                a website.
-                                            </p>
-                                        </div>
-
-                                        <div
-                                            className={`
-                                                text-[26px]
-                                                font-semibold
-                                                tracking-[-0.04em]
-                                                ${
-                                                    isDark
-                                                        ? "text-white"
-                                                        : "text-[#171717]"
-                                                }
-                                            `}
-                                        >
-                                            {
-                                                businessesWithoutWebsite
-                                            }
-                                        </div>
-
-                                    </div>
-
-                                    <div className="mt-6 space-y-2">
-
-                                        {businesses
-                                            .filter(
-                                                (
-                                                    business
-                                                ) =>
-                                                    !business.website
                                             )
-                                            .map(
-                                                (
-                                                    business
-                                                ) => (
-                                                    <button
-                                                        key={
-                                                            business.id
-                                                        }
-                                                        type="button"
-                                                        onClick={() =>
-                                                            onBusinessClick(
-                                                                business.id
-                                                            )
-                                                        }
-                                                        className={`
-                                                            flex
-                                                            w-full
-                                                            items-center
-                                                            justify-between
-                                                            rounded-lg
-                                                            border
-                                                            px-3
-                                                            py-3
-                                                            text-left
-                                                            ${
-                                                                isDark
-                                                                    ? "border-[#242424] hover:bg-[#151515]"
-                                                                    : "border-[#e2e2e2] hover:bg-[#fafafa]"
-                                                            }
-                                                        `}
-                                                    >
-                                                        <div>
-                                                            <div
-                                                                className={`
-                                                                    text-[12px]
-                                                                    font-medium
-                                                                    ${
-                                                                        isDark
-                                                                            ? "text-[#ddd]"
-                                                                            : "text-[#333]"
-                                                                    }
-                                                                `}
-                                                            >
-                                                                {
-                                                                    business.business_name
-                                                                }
-                                                            </div>
+                                        )
 
-                                                            <div className="mt-0.5 text-[11px] text-[#777]">
-                                                                {
-                                                                    business.category
-                                                                }
-                                                            </div>
-                                                        </div>
-
-                                                        <ChevronRight
-                                                            size={
-                                                                15
-                                                            }
-                                                            strokeWidth={
-                                                                1.7
-                                                            }
-                                                            className="text-[#777]"
-                                                        />
-                                                    </button>
-                                                )
-                                            )}
-
-                                    </div>
-                                </div>
-                            )}
-
-                            {activeOpportunity ===
-                                "digital-presence" && (
-                                <div
-                                    className={`
-                                        rounded-[10px]
-                                        border
-                                        p-5
-                                        ${
-                                            isDark
-                                                ? "border-[#242424] bg-[#0f0f0f]"
-                                                : "border-[#dedede] bg-white"
-                                        }
-                                    `}
-                                >
-                                    <div className="flex items-start justify-between">
-
-                                        <div>
-                                            <h3
-                                                className={`
-                                                    text-[16px]
-                                                    font-semibold
-                                                    ${
-                                                        isDark
-                                                            ? "text-white"
-                                                            : "text-[#171717]"
-                                                    }
-                                                `}
-                                            >
-                                                Businesses
-                                                With Website
-                                            </h3>
-
-                                            <p className="mt-1 text-[12px] text-[#777]">
-                                                Businesses
-                                                returned with
-                                                an existing
-                                                website.
-                                            </p>
-                                        </div>
-
-                                        <div
-                                            className={`
-                                                text-[26px]
-                                                font-semibold
-                                                tracking-[-0.04em]
-                                                ${
-                                                    isDark
-                                                        ? "text-white"
-                                                        : "text-[#171717]"
-                                                }
-                                            `}
-                                        >
-                                            {
-                                                businessesWithWebsite
-                                            }
-                                        </div>
-
-                                    </div>
-
-                                    <div className="mt-6 space-y-2">
-
-                                        {businesses
-                                            .filter(
-                                                (
-                                                    business
-                                                ) =>
-                                                    Boolean(
-                                                        business.website
-                                                    )
-                                            )
-                                            .map(
-                                                (
-                                                    business
-                                                ) => (
-                                                    <button
-                                                        key={
-                                                            business.id
-                                                        }
-                                                        type="button"
-                                                        onClick={() =>
-                                                            onBusinessClick(
-                                                                business.id
-                                                            )
-                                                        }
-                                                        className={`
-                                                            flex
-                                                            w-full
-                                                            items-center
-                                                            justify-between
-                                                            rounded-lg
-                                                            border
-                                                            px-3
-                                                            py-3
-                                                            text-left
-                                                            ${
-                                                                isDark
-                                                                    ? "border-[#242424] hover:bg-[#151515]"
-                                                                    : "border-[#e2e2e2] hover:bg-[#fafafa]"
-                                                            }
-                                                        `}
-                                                    >
-                                                        <div>
-                                                            <div
-                                                                className={`
-                                                                    text-[12px]
-                                                                    font-medium
-                                                                    ${
-                                                                        isDark
-                                                                            ? "text-[#ddd]"
-                                                                            : "text-[#333]"
-                                                                    }
-                                                                `}
-                                                            >
-                                                                {
-                                                                    business.business_name
-                                                                }
-                                                            </div>
-
-                                                            <div className="mt-0.5 text-[11px] text-[#777]">
-                                                                {
-                                                                    business.category
-                                                                }
-                                                            </div>
-                                                        </div>
-
-                                                        <ChevronRight
-                                                            size={
-                                                                15
-                                                            }
-                                                            strokeWidth={
-                                                                1.7
-                                                            }
-                                                            className="text-[#777]"
-                                                        />
-                                                    </button>
-                                                )
-                                            )}
-
-                                    </div>
-                                </div>
-                            )}
-
-                            {activeOpportunity ===
-                                "areas" && (
-                                <div
-                                    className={`
-                                        rounded-[10px]
-                                        border
-                                        p-5
-                                        ${
-                                            isDark
-                                                ? "border-[#242424] bg-[#0f0f0f]"
-                                                : "border-[#dedede] bg-white"
-                                        }
-                                    `}
-                                >
-                                    <div>
-                                        <h3
-                                            className={`
-                                                text-[16px]
-                                                font-semibold
-                                                ${
-                                                    isDark
-                                                        ? "text-white"
-                                                        : "text-[#171717]"
-                                                }
-                                            `}
-                                        >
-                                            Area Opportunities
-                                        </h3>
-
-                                        <p className="mt-1 text-[12px] text-[#777]">
-                                            Businesses
-                                            discovered across
-                                            your selected
-                                            areas.
-                                        </p>
-                                    </div>
-
-                                    {discoveredAreas.length >
-                                    0 ? (
-                                        <div className="mt-6 space-y-2">
-
-                                            {discoveredAreas.map(
-                                                ([
-                                                    area,
-                                                    count,
-                                                ]) => (
-                                                    <div
-                                                        key={
-                                                            area
-                                                        }
-                                                        className={`
-                                                            flex
-                                                            items-center
-                                                            justify-between
-                                                            rounded-lg
-                                                            border
-                                                            px-4
-                                                            py-3
-                                                            ${
-                                                                isDark
-                                                                    ? "border-[#242424]"
-                                                                    : "border-[#e2e2e2]"
-                                                            }
-                                                        `}
-                                                    >
-                                                        <div className="flex items-center gap-2">
-
-                                                            <MapPin
-                                                                size={
-                                                                    14
-                                                                }
-                                                                strokeWidth={
-                                                                    1.7
-                                                                }
-                                                                className="text-[#777]"
-                                                            />
-
-                                                            <span
-                                                                className={`
-                                                                    text-[12px]
-                                                                    font-medium
-                                                                    ${
-                                                                        isDark
-                                                                            ? "text-[#ddd]"
-                                                                            : "text-[#333]"
-                                                                    }
-                                                                `}
-                                                            >
-                                                                {
-                                                                    area
-                                                                }
-                                                            </span>
-
-                                                        </div>
-
-                                                        <span className="text-[12px] text-[#777]">
-                                                            {
-                                                                count
-                                                            }{" "}
-                                                            {count ===
-                                                            1
-                                                                ? "business"
-                                                                : "businesses"}
-                                                        </span>
-
-                                                    </div>
-                                                )
-                                            )}
-
-                                        </div>
                                     ) : (
-                                        <div className="mt-6 text-[12px] text-[#777]">
-                                            No area-specific
-                                            opportunity data
-                                            is available for
-                                            this search.
+
+                                        <div
+                                            className={`
+                                                rounded-lg
+                                                border
+                                                px-3
+                                                py-4
+                                                text-center
+                                                text-[11px]
+                                                ${
+                                                    isDark
+                                                        ? "border-[#242424] text-white"
+                                                        : "border-[#e2e2e2] text-[#777]"
+                                                }
+                                            `}
+                                        >
+                                            No businesses with a
+                                            website.
                                         </div>
+
                                     )}
 
                                 </div>
-                            )}
+
+                            </div>
+
+
+                            {/* ------------------------------------------------ */}
+                            {/* Without Website */}
+                            {/* ------------------------------------------------ */}
+
+                            <div>
+
+                                <div
+                                    className="
+                                        mb-3
+                                        flex
+                                        items-center
+                                        justify-between
+                                    "
+                                >
+
+                                    <div
+                                        className={`
+                                            flex
+                                            items-center
+                                            gap-2
+                                            text-[11px]
+                                            font-medium
+                                            ${
+                                                isDark
+                                                    ? "text-white"
+                                                    : "text-[#555]"
+                                            }
+                                        `}
+                                    >
+
+                                        <span
+                                            className="
+                                                h-2
+                                                w-2
+                                                rounded-full
+                                                bg-orange-500
+                                            "
+                                        />
+
+                                        Without Website
+
+                                    </div>
+
+
+                                    <span
+                                        className={`
+                                            text-[11px]
+                                            ${
+                                                isDark
+                                                    ? "text-white"
+                                                    : "text-[#777]"
+                                            }
+                                        `}
+                                    >
+                                        {withoutWebsite.length}
+                                    </span>
+
+                                </div>
+
+
+                                <div className="space-y-2">
+
+                                    {withoutWebsite.length > 0 ? (
+
+                                        withoutWebsite.map(
+                                            (business) => (
+
+                                                <button
+                                                    key={
+                                                        business.id
+                                                    }
+                                                    type="button"
+                                                    onClick={() =>
+                                                        onBusinessClick(
+                                                            business.id
+                                                        )
+                                                    }
+                                                    className={`
+                                                        flex
+                                                        w-full
+                                                        items-center
+                                                        justify-between
+                                                        gap-3
+                                                        rounded-lg
+                                                        border
+                                                        px-3
+                                                        py-3
+                                                        text-left
+                                                        transition-colors
+                                                        ${
+                                                            isDark
+                                                                ? "border-[#242424] hover:bg-[#151515]"
+                                                                : "border-[#e2e2e2] hover:bg-[#fafafa]"
+                                                        }
+                                                    `}
+                                                >
+
+                                                    <div
+                                                        className="
+                                                            min-w-0
+                                                        "
+                                                    >
+
+                                                        <div
+                                                            className={`
+                                                                truncate
+                                                                text-[12px]
+                                                                font-medium
+                                                                ${
+                                                                    isDark
+                                                                        ? "text-white"
+                                                                        : "text-[#333]"
+                                                                }
+                                                            `}
+                                                        >
+                                                            {
+                                                                business.business_name
+                                                            }
+                                                        </div>
+
+
+                                                        <div
+                                                            className={`
+                                                                mt-1
+                                                                flex
+                                                                items-center
+                                                                gap-2
+                                                                text-[11px]
+                                                                ${
+                                                                    isDark
+                                                                        ? "text-white"
+                                                                        : "text-[#777]"
+                                                                }
+                                                            `}
+                                                        >
+
+                                                            <span>
+                                                                {
+                                                                    business.google_rating ||
+                                                                    "—"
+                                                                }
+                                                            </span>
+
+                                                            {business.review_count !=
+                                                                null && (
+                                                                <span>
+                                                                    {
+                                                                        business.review_count
+                                                                    }{" "}
+                                                                    reviews
+                                                                </span>
+                                                            )}
+
+                                                        </div>
+
+                                                    </div>
+
+
+                                                    <ChevronRight
+                                                        size={14}
+                                                        className={
+                                                            isDark
+                                                                ? "shrink-0 text-white"
+                                                                : "shrink-0 text-[#777]"
+                                                        }
+                                                    />
+
+                                                </button>
+
+                                            )
+                                        )
+
+                                    ) : (
+
+                                        <div
+                                            className={`
+                                                rounded-lg
+                                                border
+                                                px-3
+                                                py-4
+                                                text-center
+                                                text-[11px]
+                                                ${
+                                                    isDark
+                                                        ? "border-[#242424] text-white"
+                                                        : "border-[#e2e2e2] text-[#777]"
+                                                }
+                                            `}
+                                        >
+                                            No businesses without a
+                                            website.
+                                        </div>
+
+                                    )}
+
+                                </div>
+
+                            </div>
 
                         </div>
-                    )}
 
-                </div>
-            )}
+                    </div>
+                );
+            })}
+
+    </div>
+
+)}
+
+    </div>
+)}
 
         </section>
     );
