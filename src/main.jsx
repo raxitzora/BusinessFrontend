@@ -2,6 +2,7 @@ import {
     StrictMode,
     useMemo,
 } from "react";
+import LoadingScreen from "./components/common/LoadingScreen";
 
 import {
     createRoot,
@@ -70,44 +71,35 @@ const QueryApplication = () => {
     } = useAuth();
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | Clerk Loading
-    |--------------------------------------------------------------------------
-    */
 
     if (!isLoaded) {
 
-        return (
-            <div>
-                Loading...
-            </div>
-        );
+        return <LoadingScreen />;
 
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | User-Specific Application
-    |
-    | The key forces a complete remount when the authenticated
-    | Clerk user changes.
+    | Resolve User
     |--------------------------------------------------------------------------
     */
+
+    const resolvedUserId =
+        isSignedIn && userId
+            ? userId
+            : null;
+
 
     return (
 
         <UserQueryApplication
             key={
-                isSignedIn && userId
-                    ? userId
-                    : "guest"
+                resolvedUserId ||
+                "guest"
             }
             userId={
-                isSignedIn
-                    ? userId
-                    : null
+                resolvedUserId
             }
         />
 
@@ -155,7 +147,9 @@ const UserQueryApplication = ({
                     queries: {
 
                         staleTime:
-                            5 * 60 * 1000,
+                            5 *
+                            60 *
+                            1000,
 
                         gcTime:
                             7 *
@@ -216,7 +210,9 @@ const UserQueryApplication = ({
     return (
 
         <PersistQueryClientProvider
-            client={queryClient}
+            client={
+                queryClient
+            }
             persistOptions={{
                 persister,
 

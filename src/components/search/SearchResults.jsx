@@ -591,7 +591,7 @@ sm:text-[13px]
                                 min-w-0
                                 flex-1
                                 bg-transparent
-                                text-[12px]
+                                text-[16px]
 sm:text-[13px]
                                 outline-none
                                 placeholder:opacity-100

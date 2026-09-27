@@ -1,26 +1,10 @@
-import {
-    useEffect,
-    useRef,
-    useState,
-} from "react";
+import { useEffect, useRef } from "react";
+import { useAuth } from "@clerk/clerk-react";
 
-import {
-    useAuth,
-} from "@clerk/clerk-react";
+import { syncUser } from "../services/auth.service";
+import { setTokenGetter } from "../services/axios";
 
-import {
-    syncUser,
-} from "../services/auth.service";
-
-import {
-    setTokenGetter,
-} from "../services/axios";
-
-
-const AuthSync = ({
-    children,
-}) => {
-
+const AuthSync = ({ children }) => {
     const {
         isLoaded,
         isSignedIn,
@@ -28,186 +12,80 @@ const AuthSync = ({
         getToken,
     } = useAuth();
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Track which Clerk user has been synchronized.
-    |--------------------------------------------------------------------------
-    */
-
-    const syncedUserId =
-        useRef(null);
-
-
-    const [
-        loading,
-        setLoading,
-    ] = useState(true);
-
+    const syncedUserId = useRef(null);
 
     useEffect(() => {
-
         let cancelled = false;
 
-
         const synchronize = async () => {
-
+            /*
+            |--------------------------------------------------------------------------
+            | Clerk is still initializing
+            |--------------------------------------------------------------------------
+            |
+            | DO NOT block the application here.
+            |
+            */
             if (!isLoaded) {
                 return;
             }
 
-
             /*
             |--------------------------------------------------------------------------
-            | No authenticated user
+            | User is signed out
             |--------------------------------------------------------------------------
             */
 
-            if (
-                !isSignedIn ||
-                !userId
-            ) {
-
-                syncedUserId.current =
-                    null;
-
-                if (!cancelled) {
-
-                    setLoading(
-                        false
-                    );
-
-                }
-
+            if (!isSignedIn || !userId) {
+                syncedUserId.current = null;
                 return;
-
             }
 
-
             /*
             |--------------------------------------------------------------------------
-            | Make Clerk token available to Axios
+            | Configure Axios authentication
             |--------------------------------------------------------------------------
             */
 
-            setTokenGetter(
-                getToken
-            );
-
+            setTokenGetter(getToken);
 
             /*
             |--------------------------------------------------------------------------
-            | Already synchronized for this exact user
+            | Already synchronized
             |--------------------------------------------------------------------------
             */
 
-            if (
-                syncedUserId.current ===
-                userId
-            ) {
-
-                if (!cancelled) {
-
-                    setLoading(
-                        false
-                    );
-
-                }
-
+            if (syncedUserId.current === userId) {
                 return;
-
             }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | New Clerk user
-            |--------------------------------------------------------------------------
-            */
-
-            if (!cancelled) {
-
-                setLoading(
-                    true
-                );
-
-            }
-
 
             try {
-
-                const token =
-                    await getToken();
-
+                const token = await getToken();
 
                 if (!token) {
-
                     throw new Error(
                         "Unable to obtain Clerk authentication token."
                     );
-
                 }
 
-
-                await syncUser(
-                    token
-                );
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | Mark only this user as synchronized.
-                |--------------------------------------------------------------------------
-                */
-
-                syncedUserId.current =
-                    userId;
-
+                await syncUser(token);
 
                 if (!cancelled) {
-
-                    setLoading(
-                        false
-                    );
-
+                    syncedUserId.current = userId;
                 }
-
             } catch (error) {
-
                 console.error(
                     "User sync failed:",
                     error
                 );
-
-
-                if (!cancelled) {
-
-                    setLoading(
-                        false
-                    );
-
-                }
-
             }
-
         };
-
 
         synchronize();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Cleanup
-        |--------------------------------------------------------------------------
-        */
-
         return () => {
-
             cancelled = true;
-
         };
-
     }, [
         isLoaded,
         isSignedIn,
@@ -215,27 +93,17 @@ const AuthSync = ({
         getToken,
     ]);
 
-
     /*
     |--------------------------------------------------------------------------
-    | Loading
+    | IMPORTANT
     |--------------------------------------------------------------------------
+    |
+    | Always render the application.
+    | User synchronization happens in the background.
+    |
     */
 
-    if (loading) {
-
-        return (
-            <div>
-                Loading...
-            </div>
-        );
-
-    }
-
-
     return children;
-
 };
-
 
 export default AuthSync;
