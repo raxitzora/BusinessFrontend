@@ -20,7 +20,7 @@ function Navbar() {
                     </div>
 
                     <span className="text-[21px] font-semibold leading-none tracking-[-1px] text-zinc-950 sm:text-[23px]">
-                        LeadFlow
+                        FYNDRIX
                     </span>
                 </Link>
 

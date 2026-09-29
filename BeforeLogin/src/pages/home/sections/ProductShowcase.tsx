@@ -11,8 +11,8 @@ function ProductShowcase() {
                         your next business opportunity.
                     </span>
                 }
-                src="/leadflow-product.webp"
-                showGradient={false}
+    src="/macbookimage.png"
+                showGradient={false}    
             />
         </section>
     );

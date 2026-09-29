@@ -274,7 +274,7 @@ function Sidebar({
                             }
                         `}
                     >
-                        {/* LeadFlow mark */}
+                        {/* Fyndrix mark */}
 
                         <div className="relative flex h-7 w-7 items-center justify-center">
                             <div
@@ -341,7 +341,7 @@ function Sidebar({
                                 }
                             `}
                         >
-                            LeadFlow
+                            FYNDRIX
                         </span>
                     </NavLink>
                 )}

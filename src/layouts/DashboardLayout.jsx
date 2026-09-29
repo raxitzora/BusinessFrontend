@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState,useRef } from "react";
 import { Menu } from "lucide-react";
-import { Outlet } from "react-router-dom";
+import { Outlet,useLocation  } from "react-router-dom";
 
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
@@ -8,19 +8,41 @@ import Topbar from "./Topbar";
 function DashboardLayout() {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+    const [showScrollTop, setShowScrollTop] = useState(false);
+    const [isThemeTransitioning, setIsThemeTransitioning] =
+    useState(false);
+    const location = useLocation();
+const scrollContainerRef = useRef(null);
+const scrollPositionsRef = useRef({});
 
     const [theme, setTheme] = useState(() => {
         return localStorage.getItem("leadflow-theme") || "dark";
     });
 
     useEffect(() => {
-        const root = document.documentElement;
+    const container = scrollContainerRef.current;
 
-        root.classList.remove("dark", "light");
-        root.classList.add(theme);
+    if (!container) return;
 
-        localStorage.setItem("leadflow-theme", theme);
-    }, [theme]);
+    const scrollKey =
+        location.pathname + location.search;
+
+    const savedPosition =
+        scrollPositionsRef.current[scrollKey] || 0;
+
+    requestAnimationFrame(() => {
+        container.scrollTop = savedPosition;
+    });
+}, [location.pathname, location.search]);
+
+   useEffect(() => {
+    const root = document.documentElement;
+
+    root.classList.remove("dark", "light");
+    root.classList.add(theme);
+
+    localStorage.setItem("leadflow-theme", theme);
+}, [theme]);
 
     // Close mobile sidebar when switching to desktop.
     useEffect(() => {
@@ -60,6 +82,7 @@ function DashboardLayout() {
                 overflow-hidden
                 transition-colors
                 duration-200
+                ${isThemeTransitioning ? "theme-transitioning" : ""}
                 ${
                     theme === "dark"
                         ? "bg-zinc-950 text-white"
@@ -220,40 +243,122 @@ function DashboardLayout() {
 
                 <div className="hidden lg:block">
                     <Topbar
-                        theme={theme}
-                        setTheme={setTheme}
-                    />
+    theme={theme}
+    setTheme={(nextTheme) => {
+        setIsThemeTransitioning(true);
+
+        setTheme(nextTheme);
+
+        window.setTimeout(() => {
+            setIsThemeTransitioning(false);
+        }, 280);
+    }}
+/>
                 </div>
 
                 {/* Main Content */}
 
-                <main
-                    className={`
-                        min-h-0
-                        min-w-0
-                        flex-1
-                        overflow-y-auto
-                        overflow-x-hidden
-                        p-3
-                        sm:p-4
-                        md:p-5
-                        lg:p-6
-                        transition-colors
-                        duration-200
-                        ${
-                            theme === "dark"
-                                ? "bg-zinc-900"
-                                : "bg-[#f6f6f7]"
-                        }
-                    `}
-                >
-                    <Outlet
-                        context={{
-                            theme,
-                            setTheme,
-                        }}
-                    />
-                </main>
+        <main
+    className={`
+        min-h-0
+        min-w-0
+        flex-1
+        overflow-hidden
+        transition-colors
+        duration-200
+        ${
+            theme === "dark"
+                ? "bg-zinc-900"
+                : "bg-[#f6f6f7]"
+        }
+    `}
+>
+   <div
+    key={location.pathname + location.search}
+    ref={scrollContainerRef}
+   onScroll={(event) => {
+    const container = event.currentTarget;
+
+    const scrollKey =
+        location.pathname + location.search;
+
+    scrollPositionsRef.current[scrollKey] =
+        container.scrollTop;
+
+    setShowScrollTop(container.scrollTop > 250);
+}}
+    className="
+        h-full
+        min-h-0
+        overflow-y-auto
+        overflow-x-hidden
+        p-3
+        sm:p-4
+        md:p-5
+        lg:p-6
+    "
+>
+        <Outlet
+            context={{
+                theme,
+                setTheme,
+            }}
+        />
+
+        <button
+    type="button"
+    aria-label="Back to top"
+    onClick={() => {
+        scrollContainerRef.current?.scrollTo({
+            top: 0,
+            behavior: "smooth",
+        });
+    }}
+    className={`
+        fixed
+        bottom-8
+        right-5
+        z-40
+        flex
+        h-11
+        w-11
+        items-center
+        justify-center
+        rounded-full
+        border
+        shadow-lg
+        backdrop-blur-md
+        transition-all
+        duration-300
+        ${
+            showScrollTop
+                ? "translate-y-0 scale-100 opacity-100"
+                : "pointer-events-none translate-y-3 scale-90 opacity-0"
+        }
+        ${
+            theme === "dark"
+                ? "border-zinc-700 bg-zinc-800/90 text-zinc-200 hover:bg-zinc-700"
+                : "border-zinc-300 bg-white/90 text-zinc-700 hover:bg-zinc-100"
+        }
+    `}
+>
+    <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+    >
+        <path d="m18 15-6-6-6 6" />
+    </svg>
+</button>
+        
+    </div>
+</main>
             </div>
         </div>
     );

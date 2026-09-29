@@ -349,30 +349,60 @@ const marketingLoading =
     return (
         <div className="mx-auto w-full max-w-[1400px] space-y-6">
             {/* Back */}
-            <Link
-                to="/app/search"
-                className="
-                    group
-                    inline-flex
-                    items-center
-                    gap-2
-                    text-[13px]
-                    font-medium
-                    tracking-[-0.01em]
-                    text-zinc-500 dark:text-[#777]
-                    transition-colors
-                    duration-150
-                    hover:text-zinc-900 dark:hover:text-white
-                "
-            >
-                <ArrowLeft
-                    size={15}
-                    strokeWidth={1.8}
-                    className="transition-transform duration-150 group-hover:-translate-x-0.5"
-                />
+           {/* Back Navigation */}
+<div className="flex flex-wrap items-center gap-4">
+    {/* Existing back button */}
+    <Link
+        to="/app/search"
+        className="
+            group
+            inline-flex
+            items-center
+            gap-2
+            text-[13px]
+            font-medium
+            tracking-[-0.01em]
+            text-zinc-500 dark:text-[#777]
+            transition-colors
+            duration-150
+            hover:text-zinc-900 dark:hover:text-white
+        "
+    >
+        <ArrowLeft
+            size={15}
+            strokeWidth={1.8}
+            className="transition-transform duration-150 group-hover:-translate-x-0.5"
+        />
 
-                Back to Search
-            </Link>
+        Back to Search
+    </Link>
+
+    {/* Business Opportunities back button */}
+    <Link
+        to="/app/search?view=opportunities"
+        className="
+            group
+            inline-flex
+            items-center
+            gap-2
+            text-[13px]
+            font-medium
+            tracking-[-0.01em]
+            text-zinc-500 dark:text-[#777]
+            transition-colors
+            duration-150
+            hover:text-zinc-900 dark:hover:text-white
+        "
+    >
+        <ArrowLeft
+            size={15}
+            strokeWidth={1.8}
+            className="transition-transform duration-150 group-hover:-translate-x-0.5"
+        />
+
+        Back to Business Opportunities
+    </Link>
+</div>
 
             {/* Hero */}
             <BusinessHero business={business} theme={theme} />

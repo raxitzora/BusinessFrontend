@@ -1,3 +1,113 @@
 @import "tailwindcss";
 @source "../website";
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* =========================================
+   FYNDREX Scrollbar — ChatGPT Style
+   ========================================= */
+
+* {
+    scrollbar-width: auto;
+    scrollbar-color: #3f3f46 transparent;
+}
+
+/* Chrome / Edge / Safari */
+
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #3f3f46;
+    border-radius: 9999px;
+
+    /* Creates spacing around the thumb */
+    border: 3px solid transparent;
+    background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #52525b;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+/* Dark theme */
+
+.dark * {
+    scrollbar-color: #3f3f46 transparent;
+}
+
+.dark ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+.dark ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: #3f3f46;
+    border-radius: 9999px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #52525b;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+/* Light theme */
+
+.light * {
+    scrollbar-color: #c4c4c7 transparent;
+}
+
+.light ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+.light ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.light ::-webkit-scrollbar-thumb {
+    background: #c4c4c7;
+    border-radius: 9999px;
+    border: 3px solid transparent;
+    background-clip: padding-box;
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+    background: #a1a1aa;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+/* =========================================
+   FYNDREX Theme Transition
+   ========================================= */
+
+.theme-transitioning,
+.theme-transitioning *,
+.theme-transitioning *::before,
+.theme-transitioning *::after {
+    transition-property:
+        background-color,
+        border-color,
+        color,
+        fill,
+        stroke,
+        box-shadow;
+    transition-duration: 280ms;
+    transition-timing-function: ease;
+}

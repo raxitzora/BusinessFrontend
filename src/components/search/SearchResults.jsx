@@ -10,6 +10,7 @@ import {
     ChevronRight,
     ArrowLeft,
 } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 
 import SearchProgress from "./SearchProgress";
 import BusinessCard from "./BusinessCard";
@@ -29,15 +30,26 @@ function SearchResults({
     savingLeadId,
 }) {
     const isDark = theme === "dark";
+    const [searchParams] = useSearchParams();
 
-    const [activeView, setActiveView] =
-        useState("businesses");
+    const shouldOpenOpportunities =
+    searchParams.get("view") === "opportunities";
+
+const [activeView, setActiveView] = useState(
+    shouldOpenOpportunities
+        ? "opportunities"
+        : "businesses"
+);
 
     const [businessSearch, setBusinessSearch] =
         useState("");
 
-    const [activeOpportunity, setActiveOpportunity] =
-        useState(null);
+  const [activeOpportunity, setActiveOpportunity] =
+    useState(
+        shouldOpenOpportunities
+            ? "all"
+            : null
+    );
 
     /*
     |--------------------------------------------------------------------------
