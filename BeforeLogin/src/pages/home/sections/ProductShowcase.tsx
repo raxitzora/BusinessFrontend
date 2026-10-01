@@ -2,17 +2,20 @@ import { MacbookScroll } from "@beforelogin/components/ui/macbook-scroll";
 
 function ProductShowcase() {
     return (
-        <section className="relative -mt-20 w-full overflow-hidden bg-white sm:-mt-24">
+        <section
+            className="
+                relative
+                w-full
+                overflow-visible
+                bg-white
+                transition-colors
+                duration-300
+                dark:bg-[#08090d]
+            "
+        >
             <MacbookScroll
-                title={
-                    <span>
-                        Everything you need to find
-                        <br />
-                        your next business opportunity.
-                    </span>
-                }
-    src="/macbookimage.png"
-                showGradient={false}    
+                src="/macbookimage.png"
+                showGradient={false}
             />
         </section>
     );

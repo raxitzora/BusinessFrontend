@@ -38,6 +38,38 @@ const steps = [
             "Build a complete prospect profile and turn the opportunity into a lead you can confidently approach.",
     },
 ];
+const headlineTracks = [
+    {
+        text: [
+            "FIND BUSINESSES",
+            "ANALYZE SIGNALS",
+            "EXPOSE GAPS",
+            "FIND OPPORTUNITIES",
+        ],
+        duration: 32,
+    },
+    {
+        text: [
+            "WEAK SEO",
+            "OUTDATED WEBSITE",
+            "LOW VISIBILITY",
+            "MISSED LEADS",
+            "AUTOMATION GAP",
+            "COMPETITOR GAP",
+        ],
+        duration: 38,
+    },
+    {
+        text: [
+            "SEARCH",
+            "ANALYZE",
+            "UNDERSTAND",
+            "OPPORTUNITY",
+            "ENRICH",
+        ],
+        duration: 28,
+    },
+];
 
 function ProductWorkflow() {
     const [activeStep, setActiveStep] = useState(0);
@@ -182,27 +214,296 @@ const card =
     const step = steps[activeStep];
 
     return (
-        <section className="border-t border-zinc-200 bg-white">
+<section className="border-t border-zinc-200 bg-white transition-colors duration-300 dark:border-zinc-800 dark:bg-[#08090d]">
 
-            {/* Section heading */}
 
-            <div className="mx-auto flex max-w-[1440px] flex-col items-center px-6 py-20 text-center sm:px-10 sm:py-24 lg:px-16">
-                <div className="mb-4 text-sm font-bold text-blue-600">
-                    How FYNDREX works
-                </div>
+{/* =========================================================
+    EDITORIAL SIGNAL HEADER
+========================================================= */}
 
-                <h2 className="max-w-2xl text-2xl font-bold leading-[1.1] tracking-[-0.04em] text-zinc-950 sm:text-3xl lg:text-4xl">
-                    Find businesses.
-                    <br />
-                    Discover opportunities.
-                </h2>
+<div
+    className="
+        relative
+        overflow-hidden
+        border-b
+        border-zinc-200
+        bg-white
+        pt-20
+        dark:border-zinc-800
+        dark:bg-[#08090d]
+        sm:pt-24
+        lg:pt-28
+    "
+>
+    {/* Small label */}
 
-                <p className="mt-4 max-w-xl text-base font-bold leading-6 tracking-[-0.02em] text-zinc-400 sm:text-lg">
-                    From discovering businesses to finding the
-                    right opportunity — everything happens in one
-                    workflow.
-                </p>
+    <motion.div
+        initial={{
+            opacity: 0,
+            y: 10,
+        }}
+        whileInView={{
+            opacity: 1,
+            y: 0,
+        }}
+        viewport={{
+            once: true,
+            amount: 0.5,
+        }}
+        transition={{
+            duration: 0.5,
+        }}
+        className="
+            relative
+            z-20
+            mx-auto
+            max-w-[1440px]
+            px-6
+            pb-8
+            sm:px-10
+            lg:px-16
+        "
+    >
+        <div
+            className="
+                flex
+                items-center
+                gap-2
+                text-[10px]
+                font-bold
+                uppercase
+                tracking-[0.2em]
+                text-blue-500
+            "
+        >
+            <span
+                className="
+                    h-1.5
+                    w-1.5
+                    animate-pulse
+                    rounded-full
+                    bg-blue-500
+                    shadow-[0_0_10px_rgba(59,130,246,0.7)]
+                "
+            />
+
+            FYNDREX / OPPORTUNITY ENGINE
+        </div>
+    </motion.div>
+
+    {/* Main statement */}
+
+    <div
+        className="
+            relative
+            z-20
+            mx-auto
+            max-w-[1440px]
+            px-6
+            pb-16
+            sm:px-10
+            sm:pb-20
+            lg:px-16
+        "
+    >
+        <motion.h2
+            initial={{
+                opacity: 0,
+                y: 25,
+            }}
+            whileInView={{
+                opacity: 1,
+                y: 0,
+            }}
+            viewport={{
+                once: true,
+                amount: 0.4,
+            }}
+            transition={{
+                duration: 0.7,
+                ease: [0.22, 1, 0.36, 1],
+            }}
+            className="
+                max-w-4xl
+                text-[42px]
+                font-semibold
+                leading-[0.94]
+                tracking-[-0.06em]
+                text-zinc-950
+                dark:text-white
+                sm:text-6xl
+                lg:text-[76px]
+            "
+        >
+            Don't search for leads.
+            <br />
+
+            <span className="text-zinc-400 dark:text-zinc-600">
+                Find the reason to contact them.
+            </span>
+        </motion.h2>
+    </div>
+
+    {/* =====================================================
+        MOVING HEADLINE STREAM
+    ====================================================== */}
+
+    <div className="relative pb-8">
+        {headlineTracks.map((track, trackIndex) => (
+            <div
+                key={trackIndex}
+                className="
+                    relative
+                    overflow-hidden
+                    border-t
+                    border-zinc-200
+                    dark:border-zinc-800
+                "
+            >
+                {/* Edge fade */}
+
+                <div
+                    className="
+                        pointer-events-none
+                        absolute
+                        inset-y-0
+                        left-0
+                        z-20
+                        w-20
+                        bg-gradient-to-r
+                        from-white
+                        to-transparent
+                        dark:from-[#08090d]
+                        sm:w-36
+                    "
+                />
+
+                <div
+                    className="
+                        pointer-events-none
+                        absolute
+                        inset-y-0
+                        right-0
+                        z-20
+                        w-20
+                        bg-gradient-to-l
+                        from-white
+                        to-transparent
+                        dark:from-[#08090d]
+                        sm:w-36
+                    "
+                />
+
+                <motion.div
+                    animate={{
+                        x: ["0%", "-50%"],
+                    }}
+                    transition={{
+                        duration: track.duration,
+                        repeat: Infinity,
+                        ease: "linear",
+                    }}
+                    className="
+                        flex
+                        w-max
+                        items-center
+                        py-5
+                        sm:py-6
+                    "
+                >
+                    {[
+                        ...track.text,
+                        ...track.text,
+                        ...track.text,
+                    ].map((text, index) => (
+                        <div
+                            key={`${text}-${index}`}
+                            className="flex items-center"
+                        >
+                            <span
+                                className={`
+                                    whitespace-nowrap
+                                    px-5
+                                    text-[34px]
+                                    font-semibold
+                                    uppercase
+                                    leading-none
+                                    tracking-[-0.055em]
+                                    sm:px-7
+                                    sm:text-5xl
+                                    lg:px-10
+                                    lg:text-[64px]
+                                    ${
+                                        trackIndex === 0
+                                            ? "text-zinc-900 dark:text-zinc-100"
+                                            : trackIndex === 1
+                                              ? "text-transparent [-webkit-text-stroke:1px_#a1a1aa] dark:[-webkit-text-stroke:1px_#52525b]"
+                                              : "text-blue-500 dark:text-blue-400"
+                                    }
+                                `}
+                            >
+                                {text}
+                            </span>
+
+                            <span
+                                className="
+                                    h-2
+                                    w-2
+                                    shrink-0
+                                    rounded-full
+                                    bg-zinc-300
+                                    dark:bg-zinc-700
+                                    sm:h-2.5
+                                    sm:w-2.5
+                                "
+                            />
+                        </div>
+                    ))}
+                </motion.div>
             </div>
+        ))}
+
+        {/* Bottom caption */}
+
+        <div
+            className="
+                mx-auto
+                flex
+                max-w-[1440px]
+                items-center
+                justify-between
+                px-6
+                pt-6
+                sm:px-10
+                lg:px-16
+            "
+        >
+            <span
+                className="
+                    text-[9px]
+                    font-semibold
+                    uppercase
+                    tracking-[0.18em]
+                    text-zinc-400
+                "
+            >
+                From discovery to opportunity
+            </span>
+
+            <span
+                className="
+                    text-[9px]
+                    font-semibold
+                    uppercase
+                    tracking-[0.18em]
+                    text-zinc-400
+                "
+            >
+                01 — 05
+            </span>
+        </div>
+    </div>
+</div>
 
             {/* Workflow scroll track */}
 
@@ -223,7 +524,7 @@ const card =
                             top-0
                             z-50
                             -mx-4
-                            bg-white/95
+                            bg-white/95 dark:bg-[#08090d]/95
                             px-4
                             pb-3
                             pt-3
@@ -231,8 +532,8 @@ const card =
                             lg:hidden
                         "
                     >
-                        <div className="rounded-full border border-zinc-200 bg-zinc-50 p-1 shadow-sm">
-                            <div
+<div className="rounded-full border border-zinc-200 bg-zinc-50 p-1 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+                                <div
                                 className="flex min-h-[42px] items-center gap-1 overflow-x-auto overscroll-x-contain scrollbar-hide"
                                 style={{
                                     WebkitOverflowScrolling:
@@ -320,7 +621,7 @@ ref={desktopCardRef}
                             lg:block
                         "
                     >
-                        <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm">
+<div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 transition-colors duration-300 dark:border-zinc-800 dark:bg-[#111318]">
 
                             <div className="grid lg:grid-cols-[300px_minmax(0,1fr)]">
 
@@ -352,7 +653,7 @@ ref={desktopCardRef}
                     >
                         <div
 ref={mobileCardRef}
-                            className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm"
+                            className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
                         >
                             <WorkflowContent
                                 step={step}
@@ -374,7 +675,7 @@ function WorkflowContent({
 }) {
     return (
         <div
-            className={`relative overflow-hidden bg-zinc-50 ${
+           className={`relative overflow-hidden bg-zinc-50 transition-colors duration-300 dark:bg-[#111318] ${
                 mobile
                     ? "min-h-[440px]"
                     : "min-h-[430px]"
@@ -428,7 +729,7 @@ function WorkflowContent({
                         </div>
 
                         <h3
-                            className={`font-bold tracking-[-0.03em] text-zinc-950 ${
+                            className={`font-bold tracking-[-0.03em] text-zinc-950 dark:text-white ${
                                 mobile
                                     ? "text-xl"
                                     : "text-2xl sm:text-3xl"
@@ -449,7 +750,7 @@ function WorkflowContent({
                     </div>
 
                     <div
-                        className={`overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm ${
+                        className={`overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900${
                             mobile
                                 ? "mt-5"
                                 : "mt-8"
@@ -514,15 +815,15 @@ function WorkflowNavigation({ activeStep }) {
                                 key={step.id}
                                 className={`relative flex items-center gap-4 rounded-xl px-4 py-3.5 transition-colors duration-150 ${
                                     active
-                                        ? "bg-zinc-50"
+                                        ? "bg-zinc-50 dark:bg-zinc-900"
                                         : ""
                                 }`}
                             >
                                 <div
                                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold ${
                                         active
-                                            ? "bg-zinc-950 text-white"
-                                            : "bg-zinc-100 text-zinc-400"
+                                          ? "bg-zinc-950 text-white dark:bg-white dark:text-zinc-950"
+: "bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500"
                                     }`}
                                 >
                                     {step.number}
@@ -531,8 +832,8 @@ function WorkflowNavigation({ activeStep }) {
                                 <span
                                     className={`text-sm font-semibold tracking-[-0.02em] ${
                                         active
-                                            ? "translate-x-1 text-zinc-950"
-                                            : "text-zinc-400"
+                                            ? "translate-x-1 text-zinc-950 dark:text-white"
+: "text-zinc-400 dark:text-zinc-500"
                                     }`}
                                 >
                                     {step.title}
