@@ -96,17 +96,17 @@ export const MacbookScroll = ({
             className="relative h-[300vh] w-full"
         >
             <div
-                className="
-                    sticky
-                    top-0
-                    flex
-                    h-screen
-                    w-full
-                    items-center
-                    justify-center
-                    [perspective:1400px]
-                "
-            >
+    className="
+        sticky
+        top-[80px]
+        flex
+        h-[calc(100vh-80px)]
+        w-full
+        items-center
+        justify-center
+        [perspective:1400px]
+    "
+>
                 {/* Overall MacBook size */}
                 <div
                     className="

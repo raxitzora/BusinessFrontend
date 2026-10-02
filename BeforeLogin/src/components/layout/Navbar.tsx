@@ -140,7 +140,8 @@ function Navbar() {
                             sm:text-[23px]
                         "
                     >
-                        FYNDRIX
+                        
+                        FYNDYRIX
                     </span>
                 </Link>
 

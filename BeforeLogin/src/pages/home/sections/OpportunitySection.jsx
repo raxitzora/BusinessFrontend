@@ -1,16 +1,13 @@
-import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { useRef } from "react";
+import { motion, useInView } from "motion/react";
 
 import {
     ArrowUpRight,
     Database,
     Globe2,
-    Mail,
-    MessageCircle,
     Search,
     Sparkles,
     Target,
-    UserRound,
 } from "lucide-react";
 
 /* ============================================================
@@ -53,687 +50,20 @@ const signals = [
 ];
 
 /* ============================================================
-   FLOATING INTELLIGENCE MESSAGES
-============================================================ */
-
-const floatingMessages = [
-    {
-        type: "CLIENT",
-        message: "Hey 👋",
-        icon: UserRound,
-    },
-    {
-        type: "CLIENT",
-        message: "I need more customers",
-        icon: MessageCircle,
-    },
-    {
-        type: "BUSINESS",
-        message: "Something feels off",
-        icon: Globe2,
-    },
-    {
-        type: "VISIBILITY",
-        message: "People aren't finding me",
-        icon: Search,
-    },
-    {
-        type: "ENRICHMENT",
-        message: "Contact found",
-        icon: Mail,
-    },
-    {
-        type: "DATA",
-        message: "Business signal detected",
-        icon: Database,
-    },
-    {
-        type: "OPPORTUNITY",
-        message: "There's something here",
-        icon: Target,
-    },
-];
-
-/* ============================================================
-   MOUSE PAINT CANVAS
-============================================================ */
-
-function MouseSignalCanvas({ onSignal }) {
-    const canvasRef = useRef(null);
-    const containerRef = useRef(null);
-
-    const mouseRef = useRef({
-        x: 0,
-        y: 0,
-        previousX: 0,
-        previousY: 0,
-        active: false,
-        velocity: 0,
-    });
-
-    const particlesRef = useRef([]);
-    const animationRef = useRef(null);
-    const lastSpawnRef = useRef(0);
-
-    useEffect(() => {
-        const canvas = canvasRef.current;
-        const container = containerRef.current;
-
-        if (!canvas || !container) return;
-
-        const context = canvas.getContext("2d");
-
-        if (!context) return;
-
-        let width = 0;
-        let height = 0;
-
-        /* --------------------------------------------------------
-           RESIZE
-        -------------------------------------------------------- */
-
-        const resizeCanvas = () => {
-            const rect = container.getBoundingClientRect();
-
-            const pixelRatio = Math.min(
-                window.devicePixelRatio || 1,
-                2
-            );
-
-            width = rect.width;
-            height = rect.height;
-
-            canvas.width = width * pixelRatio;
-            canvas.height = height * pixelRatio;
-
-            canvas.style.width = `${width}px`;
-            canvas.style.height = `${height}px`;
-
-            context.setTransform(
-                pixelRatio,
-                0,
-                0,
-                pixelRatio,
-                0,
-                0
-            );
-        };
-
-        resizeCanvas();
-
-        const resizeObserver = new ResizeObserver(
-            resizeCanvas
-        );
-
-        resizeObserver.observe(container);
-
-        /* --------------------------------------------------------
-           MOUSE MOVE
-        -------------------------------------------------------- */
-
-        const handlePointerMove = (event) => {
-            const rect = container.getBoundingClientRect();
-
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
-
-            const mouse = mouseRef.current;
-
-            const dx = x - mouse.x;
-            const dy = y - mouse.y;
-
-            const distance = Math.sqrt(
-                dx * dx + dy * dy
-            );
-
-            mouse.previousX = mouse.x;
-            mouse.previousY = mouse.y;
-
-            mouse.x = x;
-            mouse.y = y;
-            mouse.active = true;
-
-            mouse.velocity = Math.min(
-                distance / 8,
-                3
-            );
-
-            /* ----------------------------------------------------
-               CREATE PAINT PARTICLES
-            ---------------------------------------------------- */
-
-            if (distance > 1) {
-                const particleCount = Math.min(
-                    Math.ceil(distance / 4),
-                    10
-                );
-
-                for (
-                    let i = 0;
-                    i < particleCount;
-                    i++
-                ) {
-                    particlesRef.current.push({
-                        x:
-                            x +
-                            (Math.random() - 0.5) *
-                                18,
-                        y:
-                            y +
-                            (Math.random() - 0.5) *
-                                18,
-
-                        vx:
-                            dx * 0.018 +
-                            (Math.random() - 0.5) *
-                                0.5,
-
-                        vy:
-                            dy * 0.018 +
-                            (Math.random() - 0.5) *
-                                0.5,
-
-                        size:
-                            Math.random() * 2.5 +
-                            0.8,
-
-                        life: 1,
-
-                        decay:
-                            Math.random() * 0.012 +
-                            0.008,
-                    });
-                }
-            }
-
-            /* ----------------------------------------------------
-               SPAWN INTELLIGENCE MESSAGE
-            ---------------------------------------------------- */
-
-            const now = performance.now();
-
-            if (
-                distance > 8 &&
-                now - lastSpawnRef.current > 650
-            ) {
-                lastSpawnRef.current = now;
-
-                onSignal({
-                    ...floatingMessages[
-                        Math.floor(
-                            Math.random() *
-                                floatingMessages.length
-                        )
-                    ],
-
-                    id:
-                        `${now}-${Math.random()}`,
-
-                    x,
-
-                    y,
-
-                    vx:
-                        dx * 0.04 +
-                        (Math.random() - 0.5) *
-                            0.4,
-
-                    vy:
-                        dy * 0.04 -
-                        Math.random() * 0.4,
-                });
-            }
-        };
-
-        const handlePointerLeave = () => {
-            mouseRef.current.active = false;
-        };
-
-        container.addEventListener(
-            "pointermove",
-            handlePointerMove
-        );
-
-        container.addEventListener(
-            "pointerleave",
-            handlePointerLeave
-        );
-
-        /* --------------------------------------------------------
-           DRAW PAINT
-        -------------------------------------------------------- */
-
-        const draw = () => {
-            context.clearRect(
-                0,
-                0,
-                width,
-                height
-            );
-
-            const mouse = mouseRef.current;
-
-            /* ----------------------------------------------------
-               MOUSE GLOW
-            ---------------------------------------------------- */
-
-            if (mouse.active) {
-                const gradient =
-                    context.createRadialGradient(
-                        mouse.x,
-                        mouse.y,
-                        0,
-                        mouse.x,
-                        mouse.y,
-                        180
-                    );
-
-                gradient.addColorStop(
-                    0,
-                    "rgba(34,211,238,0.09)"
-                );
-
-                gradient.addColorStop(
-                    0.4,
-                    "rgba(34,211,238,0.035)"
-                );
-
-                gradient.addColorStop(
-                    1,
-                    "rgba(34,211,238,0)"
-                );
-
-                context.fillStyle = gradient;
-
-                context.beginPath();
-
-                context.arc(
-                    mouse.x,
-                    mouse.y,
-                    180,
-                    0,
-                    Math.PI * 2
-                );
-
-                context.fill();
-            }
-
-            /* ----------------------------------------------------
-               PAINT PARTICLES
-            ---------------------------------------------------- */
-
-            const particles =
-                particlesRef.current;
-
-            for (
-                let i = particles.length - 1;
-                i >= 0;
-                i--
-            ) {
-                const particle = particles[i];
-
-                particle.x += particle.vx;
-                particle.y += particle.vy;
-
-                particle.vx *= 0.985;
-                particle.vy *= 0.985;
-
-                particle.life -= particle.decay;
-
-                particle.size *= 0.995;
-
-                if (
-                    particle.life <= 0 ||
-                    particle.size < 0.2
-                ) {
-                    particles.splice(i, 1);
-                    continue;
-                }
-
-                context.beginPath();
-
-                context.arc(
-                    particle.x,
-                    particle.y,
-                    particle.size,
-                    0,
-                    Math.PI * 2
-                );
-
-                context.fillStyle = `rgba(
-                    34,
-                    211,
-                    238,
-                    ${particle.life * 0.3}
-                )`;
-
-                context.fill();
-            }
-
-            /* ----------------------------------------------------
-               SOFT TRAIL
-            ---------------------------------------------------- */
-
-            if (mouse.active) {
-                const dx =
-                    mouse.x - mouse.previousX;
-
-                const dy =
-                    mouse.y - mouse.previousY;
-
-                const distance = Math.sqrt(
-                    dx * dx + dy * dy
-                );
-
-                if (distance > 2) {
-                    context.save();
-
-                    context.beginPath();
-
-                    context.moveTo(
-                        mouse.previousX,
-                        mouse.previousY
-                    );
-
-                    context.lineTo(
-                        mouse.x,
-                        mouse.y
-                    );
-
-                    context.strokeStyle =
-                        "rgba(34,211,238,0.16)";
-
-                    context.lineWidth =
-                        Math.min(
-                            2.5,
-                            1 +
-                                mouse.velocity
-                        );
-
-                    context.lineCap = "round";
-
-                    context.shadowBlur = 14;
-
-                    context.shadowColor =
-                        "rgba(34,211,238,0.3)";
-
-                    context.stroke();
-
-                    context.restore();
-                }
-            }
-
-            animationRef.current =
-                requestAnimationFrame(draw);
-        };
-
-        animationRef.current =
-            requestAnimationFrame(draw);
-
-        return () => {
-            resizeObserver.disconnect();
-
-            container.removeEventListener(
-                "pointermove",
-                handlePointerMove
-            );
-
-            container.removeEventListener(
-                "pointerleave",
-                handlePointerLeave
-            );
-
-            if (animationRef.current) {
-                cancelAnimationFrame(
-                    animationRef.current
-                );
-            }
-        };
-    }, [onSignal]);
-
-    return (
-        <div
-            ref={containerRef}
-            className="
-                pointer-events-auto
-                absolute
-                inset-0
-                z-[4]
-            "
-        >
-            <canvas
-                ref={canvasRef}
-                className="
-                    absolute
-                    inset-0
-                    h-full
-                    w-full
-                "
-            />
-        </div>
-    );
-}
-
-/* ============================================================
-   FLOATING HTML SIGNAL
-============================================================ */
-
-function FloatingSignal({ signal, onComplete }) {
-    const Icon = signal.icon;
-
-    const [visible, setVisible] =
-        useState(true);
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setVisible(false);
-
-            setTimeout(() => {
-                onComplete(signal.id);
-            }, 250);
-        }, 2600);
-
-        return () => clearTimeout(timer);
-    }, [signal.id, onComplete]);
-
-    return (
-        <AnimatePresence>
-            {visible && (
-                <motion.div
-                    initial={{
-                        opacity: 0,
-                        scale: 0.82,
-                        x: signal.x - 10,
-                        y: signal.y + 12,
-                    }}
-                    animate={{
-                        opacity: 1,
-                        scale: 1,
-                        x:
-                            signal.x +
-                            signal.vx * 20 -
-                            80,
-                        y:
-                            signal.y +
-                            signal.vy * 20 -
-                            18,
-                    }}
-                    exit={{
-                        opacity: 0,
-                        scale: 0.92,
-                        y:
-                            signal.y -
-                            48,
-                    }}
-                    transition={{
-                        duration: 0.45,
-                        ease: [0.22, 1, 0.36, 1],
-                    }}
-                    className="
-                        pointer-events-none
-                        absolute
-                        z-[8]
-                        w-max
-                        max-w-[220px]
-                    "
-                    style={{
-                        left: 0,
-                        top: 0,
-                    }}
-                >
-                    <div
-                        className="
-                            relative
-                            overflow-hidden
-                            rounded-xl
-                            border
-                            border-cyan-400/25
-                            bg-white/90
-                            px-3
-                            py-2.5
-                            shadow-[0_15px_45px_rgba(0,0,0,0.10)]
-                            backdrop-blur-xl
-                            dark:border-cyan-400/20
-                            dark:bg-[#0d1118]/90
-                            dark:shadow-[0_15px_45px_rgba(0,0,0,0.4)]
-                        "
-                    >
-                        {/* cyan light */}
-                        <div
-                            className="
-                                pointer-events-none
-                                absolute
-                                -right-5
-                                -top-5
-                                h-14
-                                w-14
-                                rounded-full
-                                bg-cyan-400/10
-                                blur-xl
-                            "
-                        />
-
-                        <div
-                            className="
-                                relative
-                                flex
-                                items-start
-                                gap-2.5
-                            "
-                        >
-                            <div
-                                className="
-                                    mt-0.5
-                                    flex
-                                    h-7
-                                    w-7
-                                    shrink-0
-                                    items-center
-                                    justify-center
-                                    rounded-lg
-                                    border
-                                    border-cyan-400/20
-                                    bg-cyan-400/10
-                                    text-cyan-500
-                                    dark:text-cyan-300
-                                "
-                            >
-                                <Icon size={13} />
-                            </div>
-
-                            <div>
-                                <div
-                                    className="
-                                        text-[8px]
-                                        font-semibold
-                                        uppercase
-                                        tracking-[0.18em]
-                                        text-cyan-600
-                                        dark:text-cyan-300
-                                    "
-                                >
-                                    {signal.type}
-                                </div>
-
-                                <div
-                                    className="
-                                        mt-0.5
-                                        whitespace-nowrap
-                                        text-[12px]
-                                        font-medium
-                                        leading-5
-                                        text-zinc-800
-                                        dark:text-zinc-200
-                                    "
-                                >
-                                    {signal.message}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* tiny signal line */}
-                        <motion.div
-                            initial={{
-                                scaleX: 0,
-                            }}
-                            animate={{
-                                scaleX: 1,
-                            }}
-                            transition={{
-                                duration: 1.8,
-                                ease: "linear",
-                            }}
-                            className="
-                                absolute
-                                bottom-0
-                                left-0
-                                h-px
-                                w-full
-                                origin-left
-                                bg-gradient-to-r
-                                from-transparent
-                                via-cyan-400/60
-                                to-transparent
-                            "
-                        />
-                    </div>
-                </motion.div>
-            )}
-        </AnimatePresence>
-    );
-}
-
-/* ============================================================
    MAIN SECTION
 ============================================================ */
 
 function OpportunitySection() {
-    const [floatingSignals, setFloatingSignals] =
-        useState([]);
+    const sectionRef = useRef(null);
 
-    const handleNewSignal = (signal) => {
-        setFloatingSignals((current) => {
-            const next = [
-                ...current,
-                signal,
-            ];
-
-            /* keep maximum 5 visible */
-            return next.slice(-5);
-        });
-    };
-
-    const removeSignal = (id) => {
-        setFloatingSignals((current) =>
-            current.filter(
-                (signal) =>
-                    signal.id !== id
-            )
-        );
-    };
+    const isInView = useInView(sectionRef, {
+        once: true,
+        amount: 0.18,
+    });
 
     return (
         <section
+            ref={sectionRef}
             className="
                 relative
                 min-h-screen
@@ -751,15 +81,66 @@ function OpportunitySection() {
             "
         >
             {/* =====================================================
+                CREATIVE ARRIVAL LIGHT
+            ====================================================== */}
+
+            <motion.div
+                initial={{
+                    opacity: 0,
+                    scaleX: 0,
+                }}
+                animate={
+                    isInView
+                        ? {
+                              opacity: [0, 1, 0.45],
+                              scaleX: [0, 1, 1],
+                          }
+                        : {}
+                }
+                transition={{
+                    duration: 1.5,
+                    ease: [0.16, 1, 0.3, 1],
+                }}
+                className="
+                    pointer-events-none
+                    absolute
+                    left-0
+                    right-0
+                    top-0
+                    z-30
+                    h-px
+                    origin-left
+                    bg-gradient-to-r
+                    from-transparent
+                    via-cyan-400/70
+                    to-transparent
+                    blur-[1px]
+                "
+            />
+
+            {/* =====================================================
                 BACKGROUND GRID
             ====================================================== */}
 
-            <div
+            <motion.div
+                initial={{
+                    opacity: 0,
+                }}
+                animate={
+                    isInView
+                        ? {
+                              opacity: 0.5,
+                          }
+                        : {}
+                }
+                transition={{
+                    duration: 1.2,
+                    delay: 0.2,
+                }}
                 className="
                     pointer-events-none
                     absolute
                     inset-0
-                    opacity-50
                     dark:opacity-30
                 "
                 style={{
@@ -775,29 +156,83 @@ function OpportunitySection() {
                             transparent 1px
                         )
                     `,
-                    backgroundSize:
-                        "48px 48px",
+                    backgroundSize: "48px 48px",
                 }}
             />
 
             {/* =====================================================
-                STATIC RADIAL LIGHT
+                CENTRAL ATMOSPHERE
             ====================================================== */}
 
-            <div
+            <motion.div
+                initial={{
+                    opacity: 0,
+                    scale: 0.4,
+                }}
+                animate={
+                    isInView
+                        ? {
+                              opacity: 1,
+                              scale: 1,
+                          }
+                        : {}
+                }
+                transition={{
+                    duration: 1.8,
+                    delay: 0.15,
+                    ease: [0.16, 1, 0.3, 1],
+                }}
                 className="
                     pointer-events-none
                     absolute
                     left-1/2
-                    top-1/2
+                    top-[52%]
                     h-[700px]
                     w-[700px]
                     -translate-x-1/2
                     -translate-y-1/2
                     rounded-full
-                    bg-cyan-400/[0.05]
-                    blur-[100px]
-                    dark:bg-cyan-400/[0.045]
+                    bg-cyan-400/[0.045]
+                    blur-[120px]
+                    dark:bg-cyan-400/[0.04]
+                "
+            />
+
+            {/* =====================================================
+                SECONDARY ORBIT GLOW
+            ====================================================== */}
+
+            <motion.div
+                initial={{
+                    opacity: 0,
+                    scale: 0.3,
+                }}
+                animate={
+                    isInView
+                        ? {
+                              opacity: [0, 0.7, 0.35],
+                              scale: [0.3, 1.15, 1],
+                          }
+                        : {}
+                }
+                transition={{
+                    duration: 2.2,
+                    delay: 0.4,
+                    ease: [0.16, 1, 0.3, 1],
+                }}
+                className="
+                    pointer-events-none
+                    absolute
+                    left-1/2
+                    top-[52%]
+                    h-[380px]
+                    w-[380px]
+                    -translate-x-1/2
+                    -translate-y-1/2
+                    rounded-full
+                    border
+                    border-cyan-400/[0.07]
+                    blur-[1px]
                 "
             />
 
@@ -823,75 +258,35 @@ function OpportunitySection() {
                     sm:pt-28
                 "
             >
-                <motion.div
-                    initial={{
-                        opacity: 0,
-                        y: 12,
-                    }}
-                    whileInView={{
-                        opacity: 1,
-                        y: 0,
-                    }}
-                    viewport={{
-                        once: true,
-                        amount: 0.4,
-                    }}
-                    transition={{
-                        duration: 0.5,
-                    }}
-                    className="
-                        inline-flex
-                        items-center
-                        gap-2
-                        rounded-full
-                        border
-                        border-zinc-200
-                        bg-white/80
-                        px-3
-                        py-1.5
-                        text-xs
-                        font-medium
-                        text-zinc-600
-                        shadow-sm
-                        backdrop-blur
-                        dark:border-zinc-700
-                        dark:bg-zinc-900/60
-                        dark:text-zinc-400
-                    "
-                >
-                    <span
-                        className="
-                            h-1.5
-                            w-1.5
-                            animate-pulse
-                            rounded-full
-                            bg-cyan-400
-                            shadow-[0_0_10px_rgba(34,211,238,0.8)]
-                        "
-                    />
+             
 
-                    Opportunity intelligence
-                </motion.div>
+                {/* Main heading */}
 
                 <motion.h2
                     initial={{
                         opacity: 0,
-                        y: 20,
+                        y: 60,
+                        scale: 0.94,
+                        filter: "blur(12px)",
                     }}
-                    whileInView={{
-                        opacity: 1,
-                        y: 0,
-                    }}
-                    viewport={{
-                        once: true,
-                        amount: 0.4,
-                    }}
+                    animate={
+                        isInView
+                            ? {
+                                  opacity: 1,
+                                  y: 0,
+                                  scale: 1,
+                                  filter: "blur(0px)",
+                              }
+                            : {}
+                    }
                     transition={{
-                        duration: 0.65,
-                        delay: 0.08,
+                        duration: 1,
+                        delay: 0.28,
+                        ease: [0.16, 1, 0.3, 1],
                     }}
                     className="
                         mt-6
+                        uppercase
                         max-w-4xl
                         text-balance
                         text-[44px]
@@ -905,32 +300,55 @@ function OpportunitySection() {
                     Don't search for leads.
                     <br />
 
-                    <span
+                    <motion.span
+                        initial={{
+                            opacity: 0,
+                            y: 25,
+                        }}
+                        animate={
+                            isInView
+                                ? {
+                                      opacity: 1,
+                                      y: 0,
+                                  }
+                                : {}
+                        }
+                        transition={{
+                            duration: 0.7,
+                            delay: 0.65,
+                            ease: [0.16, 1, 0.3, 1],
+                        }}
                         className="
-                            text-zinc-400
-                            dark:text-zinc-500
+                            inline-block
+                            text-zinc-900
+                            dark:text-zinc-400
                         "
                     >
                         Find the opportunity.
-                    </span>
+                    </motion.span>
                 </motion.h2>
+
+                {/* Description */}
 
                 <motion.p
                     initial={{
                         opacity: 0,
-                        y: 14,
+                        y: 25,
+                        filter: "blur(5px)",
                     }}
-                    whileInView={{
-                        opacity: 1,
-                        y: 0,
-                    }}
-                    viewport={{
-                        once: true,
-                        amount: 0.4,
-                    }}
+                    animate={
+                        isInView
+                            ? {
+                                  opacity: 1,
+                                  y: 0,
+                                  filter: "blur(0px)",
+                              }
+                            : {}
+                    }
                     transition={{
-                        duration: 0.6,
-                        delay: 0.16,
+                        duration: 0.8,
+                        delay: 0.72,
+                        ease: [0.16, 1, 0.3, 1],
                     }}
                     className="
                         mt-6
@@ -956,7 +374,33 @@ function OpportunitySection() {
                 INTELLIGENCE VISUAL
             ====================================================== */}
 
-            <div
+            <motion.div
+                initial={{
+                    opacity: 0,
+                    y: 140,
+                    scale: 0.84,
+                    rotateX: 12,
+                    filter: "blur(14px)",
+                }}
+                animate={
+                    isInView
+                        ? {
+                              opacity: 1,
+                              y: 0,
+                              scale: 1,
+                              rotateX: 0,
+                              filter: "blur(0px)",
+                          }
+                        : {}
+                }
+                transition={{
+                    duration: 1.35,
+                    delay: 0.55,
+                    ease: [0.16, 1, 0.3, 1],
+                }}
+                style={{
+                    transformPerspective: 1200,
+                }}
                 className="
                     relative
                     mx-auto
@@ -969,44 +413,42 @@ function OpportunitySection() {
                 "
             >
                 {/* =================================================
-                    MOUSE PAINT EFFECT
+                    CENTRAL ARRIVAL PULSE
                 ================================================== */}
 
-                <MouseSignalCanvas
-                    onSignal={
-                        handleNewSignal
+                <motion.div
+                    initial={{
+                        opacity: 0,
+                        scale: 0,
+                    }}
+                    animate={
+                        isInView
+                            ? {
+                                  opacity: [0, 0.9, 0.2],
+                                  scale: [0, 1.3, 1],
+                              }
+                            : {}
                     }
-                />
-
-                {/* =================================================
-                    FLOATING HTML SIGNALS
-
-                    IMPORTANT:
-                    These are HTML, not canvas text.
-                    Therefore they remain visible.
-                ================================================== */}
-
-                <div
+                    transition={{
+                        duration: 1.8,
+                        delay: 0.9,
+                        ease: [0.16, 1, 0.3, 1],
+                    }}
                     className="
                         pointer-events-none
                         absolute
-                        inset-0
-                        z-[7]
-                        overflow-hidden
+                        left-1/2
+                        top-1/2
+                        z-[1]
+                        h-[300px]
+                        w-[300px]
+                        -translate-x-1/2
+                        -translate-y-1/2
+                        rounded-full
+                        border
+                        border-cyan-400/20
                     "
-                >
-                    {floatingSignals.map(
-                        (signal) => (
-                            <FloatingSignal
-                                key={signal.id}
-                                signal={signal}
-                                onComplete={
-                                    removeSignal
-                                }
-                            />
-                        )
-                    )}
-                </div>
+                />
 
                 {/* =================================================
                     CONNECTION LINES
@@ -1025,6 +467,8 @@ function OpportunitySection() {
                     preserveAspectRatio="none"
                     fill="none"
                 >
+                    {/* Top left */}
+
                     <motion.path
                         d="
                             M 150 140
@@ -1043,18 +487,22 @@ function OpportunitySection() {
                             pathLength: 0,
                             opacity: 0,
                         }}
-                        whileInView={{
-                            pathLength: 1,
-                            opacity: 1,
-                        }}
-                        viewport={{
-                            once: true,
-                        }}
+                        animate={
+                            isInView
+                                ? {
+                                      pathLength: 1,
+                                      opacity: 1,
+                                  }
+                                : {}
+                        }
                         transition={{
-                            duration: 1.2,
-                            delay: 0.3,
+                            duration: 1.4,
+                            delay: 1.05,
+                            ease: [0.16, 1, 0.3, 1],
                         }}
                     />
+
+                    {/* Top right */}
 
                     <motion.path
                         d="
@@ -1074,18 +522,22 @@ function OpportunitySection() {
                             pathLength: 0,
                             opacity: 0,
                         }}
-                        whileInView={{
-                            pathLength: 1,
-                            opacity: 1,
-                        }}
-                        viewport={{
-                            once: true,
-                        }}
+                        animate={
+                            isInView
+                                ? {
+                                      pathLength: 1,
+                                      opacity: 1,
+                                  }
+                                : {}
+                        }
                         transition={{
-                            duration: 1.2,
-                            delay: 0.45,
+                            duration: 1.4,
+                            delay: 1.18,
+                            ease: [0.16, 1, 0.3, 1],
                         }}
                     />
+
+                    {/* Bottom left */}
 
                     <motion.path
                         d="
@@ -1105,18 +557,22 @@ function OpportunitySection() {
                             pathLength: 0,
                             opacity: 0,
                         }}
-                        whileInView={{
-                            pathLength: 1,
-                            opacity: 1,
-                        }}
-                        viewport={{
-                            once: true,
-                        }}
+                        animate={
+                            isInView
+                                ? {
+                                      pathLength: 1,
+                                      opacity: 1,
+                                  }
+                                : {}
+                        }
                         transition={{
-                            duration: 1.2,
-                            delay: 0.6,
+                            duration: 1.4,
+                            delay: 1.31,
+                            ease: [0.16, 1, 0.3, 1],
                         }}
                     />
+
+                    {/* Bottom right */}
 
                     <motion.path
                         d="
@@ -1136,16 +592,18 @@ function OpportunitySection() {
                             pathLength: 0,
                             opacity: 0,
                         }}
-                        whileInView={{
-                            pathLength: 1,
-                            opacity: 1,
-                        }}
-                        viewport={{
-                            once: true,
-                        }}
+                        animate={
+                            isInView
+                                ? {
+                                      pathLength: 1,
+                                      opacity: 1,
+                                  }
+                                : {}
+                        }
                         transition={{
-                            duration: 1.2,
-                            delay: 0.75,
+                            duration: 1.4,
+                            delay: 1.44,
+                            ease: [0.16, 1, 0.3, 1],
                         }}
                     />
                 </svg>
@@ -1157,29 +615,47 @@ function OpportunitySection() {
                 {signals.map((signal) => {
                     const Icon = signal.icon;
 
+                    const comesFromLeft =
+                        signal.position.includes("left");
+
+                    const comesFromTop =
+                        signal.position.includes("top");
+
                     return (
                         <motion.div
-                            key={
-                                signal.label
-                            }
+                            key={signal.label}
                             initial={{
                                 opacity: 0,
-                                y: 18,
-                                scale: 0.96,
+                                x: comesFromLeft
+                                    ? -55
+                                    : 55,
+                                y: comesFromTop
+                                    ? -55
+                                    : 55,
+                                scale: 0.78,
+                                rotate: comesFromLeft
+                                    ? -5
+                                    : 5,
+                                filter: "blur(8px)",
                             }}
-                            whileInView={{
-                                opacity: 1,
-                                y: 0,
-                                scale: 1,
-                            }}
-                            viewport={{
-                                once: true,
-                                amount: 0.3,
-                            }}
+                            animate={
+                                isInView
+                                    ? {
+                                          opacity: 1,
+                                          x: 0,
+                                          y: 0,
+                                          scale: 1,
+                                          rotate: 0,
+                                          filter: "blur(0px)",
+                                      }
+                                    : {}
+                            }
                             transition={{
-                                duration: 0.55,
+                                duration: 0.95,
                                 delay:
+                                    1.05 +
                                     signal.delay,
+                                ease: [0.16, 1, 0.3, 1],
                             }}
                             className={`
                                 absolute
@@ -1225,17 +701,11 @@ function OpportunitySection() {
                                             dark:text-zinc-400
                                         "
                                     >
-                                        <Icon
-                                            size={
-                                                14
-                                            }
-                                        />
+                                        <Icon size={14} />
                                     </div>
 
                                     <ArrowUpRight
-                                        size={
-                                            13
-                                        }
+                                        size={13}
                                         className="
                                             text-zinc-400
                                             dark:text-zinc-600
@@ -1253,9 +723,7 @@ function OpportunitySection() {
                                         text-zinc-400
                                     "
                                 >
-                                    {
-                                        signal.label
-                                    }
+                                    {signal.label}
                                 </div>
 
                                 <div
@@ -1267,9 +735,7 @@ function OpportunitySection() {
                                         dark:text-zinc-200
                                     "
                                 >
-                                    {
-                                        signal.value
-                                    }
+                                    {signal.value}
                                 </div>
                             </div>
                         </motion.div>
@@ -1283,19 +749,24 @@ function OpportunitySection() {
                 <motion.div
                     initial={{
                         opacity: 0,
-                        scale: 0.9,
+                        scale: 0.35,
+                        rotate: -18,
+                        filter: "blur(12px)",
                     }}
-                    whileInView={{
-                        opacity: 1,
-                        scale: 1,
-                    }}
-                    viewport={{
-                        once: true,
-                        amount: 0.35,
-                    }}
+                    animate={
+                        isInView
+                            ? {
+                                  opacity: 1,
+                                  scale: 1,
+                                  rotate: 0,
+                                  filter: "blur(0px)",
+                              }
+                            : {}
+                    }
                     transition={{
-                        duration: 0.8,
-                        delay: 0.3,
+                        duration: 1.15,
+                        delay: 1.35,
+                        ease: [0.16, 1, 0.3, 1],
                     }}
                     className="
                         absolute
@@ -1309,16 +780,38 @@ function OpportunitySection() {
                         justify-center
                     "
                 >
-                    {/* outer ring */}
+                    {/* Outer ring */}
 
                     <motion.div
-                        animate={{
-                            rotate: 360,
+                        initial={{
+                            opacity: 0,
+                            scale: 0.6,
                         }}
+                        animate={
+                            isInView
+                                ? {
+                                      opacity: 1,
+                                      scale: 1,
+                                      rotate: 360,
+                                  }
+                                : {}
+                        }
                         transition={{
-                            duration: 18,
-                            repeat: Infinity,
-                            ease: "linear",
+                            opacity: {
+                                duration: 0.7,
+                                delay: 1.55,
+                            },
+                            scale: {
+                                duration: 1,
+                                delay: 1.45,
+                                ease: [0.16, 1, 0.3, 1],
+                            },
+                            rotate: {
+                                duration: 18,
+                                delay: 1.8,
+                                repeat: Infinity,
+                                ease: "linear",
+                            },
                         }}
                         className="
                             absolute
@@ -1331,16 +824,38 @@ function OpportunitySection() {
                         "
                     />
 
-                    {/* middle ring */}
+                    {/* Middle ring */}
 
                     <motion.div
-                        animate={{
-                            rotate: -360,
+                        initial={{
+                            opacity: 0,
+                            scale: 0.5,
                         }}
+                        animate={
+                            isInView
+                                ? {
+                                      opacity: 1,
+                                      scale: 1,
+                                      rotate: -360,
+                                  }
+                                : {}
+                        }
                         transition={{
-                            duration: 12,
-                            repeat: Infinity,
-                            ease: "linear",
+                            opacity: {
+                                duration: 0.6,
+                                delay: 1.65,
+                            },
+                            scale: {
+                                duration: 0.9,
+                                delay: 1.55,
+                                ease: [0.16, 1, 0.3, 1],
+                            },
+                            rotate: {
+                                duration: 12,
+                                delay: 1.8,
+                                repeat: Infinity,
+                                ease: "linear",
+                            },
                         }}
                         className="
                             absolute
@@ -1352,25 +867,33 @@ function OpportunitySection() {
                         "
                     />
 
-                    {/* glow */}
+                    {/* Glow */}
 
                     <motion.div
-                        animate={{
-                            scale: [
-                                0.95,
-                                1.08,
-                                0.95,
-                            ],
-                            opacity: [
-                                0.25,
-                                0.45,
-                                0.25,
-                            ],
+                        initial={{
+                            opacity: 0,
+                            scale: 0.3,
                         }}
+                        animate={
+                            isInView
+                                ? {
+                                      opacity: [
+                                          0,
+                                          0.45,
+                                          0.25,
+                                      ],
+                                      scale: [
+                                          0.3,
+                                          1.08,
+                                          0.95,
+                                      ],
+                                  }
+                                : {}
+                        }
                         transition={{
-                            duration: 3,
-                            repeat: Infinity,
-                            ease: "easeInOut",
+                            duration: 1.5,
+                            delay: 1.45,
+                            ease: [0.16, 1, 0.3, 1],
                         }}
                         className="
                             absolute
@@ -1382,9 +905,26 @@ function OpportunitySection() {
                         "
                     />
 
-                    {/* scanner */}
+                    {/* Scanner */}
 
-                    <div
+                    <motion.div
+                        initial={{
+                            opacity: 0,
+                            scale: 0.5,
+                        }}
+                        animate={
+                            isInView
+                                ? {
+                                      opacity: 1,
+                                      scale: 1,
+                                  }
+                                : {}
+                        }
+                        transition={{
+                            duration: 0.8,
+                            delay: 1.55,
+                            ease: [0.16, 1, 0.3, 1],
+                        }}
                         className="
                             relative
                             flex
@@ -1451,18 +991,34 @@ function OpportunitySection() {
                                 Scanning
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
 
-                    {/* rotating scanner beam */}
+                    {/* Scanner beam */}
 
                     <motion.div
-                        animate={{
-                            rotate: 360,
+                        initial={{
+                            opacity: 0,
+                            rotate: -90,
                         }}
+                        animate={
+                            isInView
+                                ? {
+                                      opacity: 1,
+                                      rotate: 360,
+                                  }
+                                : {}
+                        }
                         transition={{
-                            duration: 4,
-                            repeat: Infinity,
-                            ease: "linear",
+                            opacity: {
+                                duration: 0.5,
+                                delay: 1.8,
+                            },
+                            rotate: {
+                                duration: 4,
+                                delay: 1.8,
+                                repeat: Infinity,
+                                ease: "linear",
+                            },
                         }}
                         className="
                             pointer-events-none
@@ -1480,6 +1036,45 @@ function OpportunitySection() {
                                 "50% 100%",
                         }}
                     />
+
+                    {/* Center pulse */}
+
+                    <motion.div
+                        initial={{
+                            opacity: 0,
+                            scale: 0,
+                        }}
+                        animate={
+                            isInView
+                                ? {
+                                      opacity: [
+                                          0,
+                                          0.8,
+                                          0,
+                                      ],
+                                      scale: [
+                                          0,
+                                          1.8,
+                                          2.4,
+                                      ],
+                                  }
+                                : {}
+                        }
+                        transition={{
+                            duration: 1.6,
+                            delay: 1.8,
+                            ease: "easeOut",
+                        }}
+                        className="
+                            pointer-events-none
+                            absolute
+                            h-8
+                            w-8
+                            rounded-full
+                            border
+                            border-cyan-400/40
+                        "
+                    />
                 </motion.div>
 
                 {/* =================================================
@@ -1489,21 +1084,29 @@ function OpportunitySection() {
                 <motion.div
                     initial={{
                         opacity: 0,
-                        y: 20,
-                        scale: 0.96,
+                        y: 70,
+                        scale: 0.82,
+                        rotateX: 18,
+                        filter: "blur(10px)",
                     }}
-                    whileInView={{
-                        opacity: 1,
-                        y: 0,
-                        scale: 1,
-                    }}
-                    viewport={{
-                        once: true,
-                        amount: 0.35,
-                    }}
+                    animate={
+                        isInView
+                            ? {
+                                  opacity: 1,
+                                  y: 0,
+                                  scale: 1,
+                                  rotateX: 0,
+                                  filter: "blur(0px)",
+                              }
+                            : {}
+                    }
                     transition={{
-                        duration: 0.65,
-                        delay: 1,
+                        duration: 1,
+                        delay: 2.15,
+                        ease: [0.16, 1, 0.3, 1],
+                    }}
+                    style={{
+                        transformPerspective: 1000,
                     }}
                     className="
                         absolute
@@ -1557,11 +1160,7 @@ function OpportunitySection() {
                                         dark:text-cyan-300
                                     "
                                 >
-                                    <Target
-                                        size={
-                                            14
-                                        }
-                                    />
+                                    <Target size={14} />
                                 </span>
 
                                 <span
@@ -1652,24 +1251,57 @@ function OpportunitySection() {
                                 Signal strength
                             </span>
 
-                            <span
+                            <motion.span
+                                initial={{
+                                    opacity: 0,
+                                    x: 10,
+                                }}
+                                animate={
+                                    isInView
+                                        ? {
+                                              opacity: 1,
+                                              x: 0,
+                                          }
+                                        : {}
+                                }
+                                transition={{
+                                    duration: 0.5,
+                                    delay: 2.8,
+                                }}
                                 className="
                                     font-semibold
                                     text-cyan-500
                                 "
                             >
                                 92%
-                            </span>
+                            </motion.span>
                         </div>
                     </div>
                 </motion.div>
-            </div>
+            </motion.div>
 
             {/* =====================================================
                 BOTTOM MESSAGE
             ====================================================== */}
 
-            <div
+            <motion.div
+                initial={{
+                    opacity: 0,
+                    y: 25,
+                }}
+                animate={
+                    isInView
+                        ? {
+                              opacity: 1,
+                              y: 0,
+                          }
+                        : {}
+                }
+                transition={{
+                    duration: 0.7,
+                    delay: 2.55,
+                    ease: [0.16, 1, 0.3, 1],
+                }}
                 className="
                     relative
                     z-20
@@ -1707,7 +1339,7 @@ function OpportunitySection() {
                         FYNDREX Intelligence Engine
                     </span>
                 </div>
-            </div>
+            </motion.div>
         </section>
     );
 }

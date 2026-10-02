@@ -136,10 +136,7 @@ const card =
                         steps.length - 1,
                         Math.max(
                             0,
-                            Math.round(
-                                progress *
-                                    (steps.length - 1)
-                            )
+                         Math.floor(progress * steps.length)
                         )
                     );
 
@@ -171,10 +168,7 @@ const card =
                         steps.length - 1,
                         Math.max(
                             0,
-                            Math.round(
-                                progress *
-                                    (steps.length - 1)
-                            )
+                         Math.floor(progress * steps.length)
                         )
                     );
 
@@ -333,12 +327,13 @@ const card =
                 dark:text-white
                 sm:text-6xl
                 lg:text-[76px]
+                uppercase
             "
         >
             Don't search for leads.
             <br />
 
-            <span className="text-zinc-400 dark:text-zinc-600">
+            <span className="text-zinc-900 dark:text-zinc-400">
                 Find the reason to contact them.
             </span>
         </motion.h2>
@@ -511,8 +506,7 @@ const card =
                 ref={workflowRef}
                 className="relative mx-auto max-w-[1440px] px-4 pb-16 sm:px-10 sm:pb-24 lg:px-16 lg:pb-28"
             >
-                <div className="relative min-h-[1250px] lg:min-h-[1100px]">
-
+<div className="relative min-h-[1900px] lg:min-h-[1800px]">
                     {/* ========================= */}
                     {/* MOBILE CAPSULE             */}
                     {/* ========================= */}
@@ -699,10 +693,10 @@ function WorkflowContent({
                         opacity: 0,
                         y: -6,
                     }}
-                    transition={{
-                        duration: 0.14,
-                        ease: "linear",
-                    }}
+                transition={{
+    duration: 0.45,
+    ease: [0.22, 1, 0.36, 1],
+}}
                     className={`flex h-full flex-col justify-center ${
                         mobile
         ? "px-4 pb-4 pt-5"

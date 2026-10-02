@@ -5,7 +5,7 @@ import HeroSection from "./sections/HeroSection";
 import ProductShowcase from "./sections/ProductShowcase";
 import ProductWorkflow from "./sections/ProductWorkflow";
 import OpportunitySection from "./sections/OpportunitySection";
-
+import Footer from "../../components/layout/Footer";
 function HomePage() {
     useEffect(() => {
         const lenis = new Lenis({
@@ -38,6 +38,7 @@ function HomePage() {
                 <ProductShowcase />
                 <OpportunitySection />
                 <ProductWorkflow />
+                <Footer />
             </main>
         </div>
     );
