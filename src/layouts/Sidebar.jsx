@@ -341,7 +341,7 @@ function Sidebar({
                                 }
                             `}
                         >
-                            FYNDRIX
+                            FYNDYRIX
                         </span>
                     </NavLink>
                 )}

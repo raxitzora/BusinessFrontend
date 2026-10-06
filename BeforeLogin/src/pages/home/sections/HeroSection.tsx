@@ -1,67 +1,80 @@
+import { useRef } from "react";
 import { motion, useScroll, useTransform } from "motion/react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Coins } from "lucide-react";
-import { useRef } from "react";
 
 /* ============================================================
-   START BUTTON
+   Shared animation configuration
+============================================================ */
+
+const coins = [
+    { id: 1, delay: 0, x: -65, y: -18 },
+    { id: 2, delay: 0.18, x: -95, y: 8 },
+    { id: 3, delay: 0.36, x: -72, y: 35 },
+    { id: 4, delay: 0.54, x: -110, y: 22 },
+];
+
+const coinVariants = {
+    rest: (coin: (typeof coins)[number]) => ({
+        opacity: 0,
+        x: coin.x,
+        y: coin.y,
+        scale: 0.5,
+    }),
+
+    hover: (coin: (typeof coins)[number]) => ({
+        opacity: [0, 1, 1, 0],
+        x: [coin.x, coin.x + 30, coin.x + 65, 0],
+        y: [coin.y, coin.y - 8, coin.y + 5, 0],
+        scale: [0.5, 0.9, 0.8, 0.2],
+    }),
+};
+
+const buttonTextVariants = {
+    rest: { y: 0, opacity: 1 },
+    hover: { y: -22, opacity: 0 },
+};
+
+const hoverTextVariants = {
+    rest: { y: 22, opacity: 0 },
+    hover: { y: 0, opacity: 1 },
+};
+
+const entrance = {
+    initial: {
+        opacity: 0,
+        y: 16,
+    },
+    animate: {
+        opacity: 1,
+        y: 0,
+    },
+};
+
+const entranceTransition = {
+    duration: 0.7,
+    ease: "easeOut" as const,
+};
+
+
+/* ============================================================
+   Start button with animated money particles
 ============================================================ */
 
 function MoneyFlowButton() {
-    const coins = [
-        { id: 1, delay: 0, x: -65, y: -18 },
-        { id: 2, delay: 0.18, x: -95, y: 8 },
-        { id: 3, delay: 0.36, x: -72, y: 35 },
-        { id: 4, delay: 0.54, x: -110, y: 22 },
-    ];
-
     return (
         <motion.div
             initial="rest"
             whileHover="hover"
             className="relative"
         >
-            {/* ====================================================
-                MONEY PARTICLES
-            ===================================================== */}
-
+            {/* Floating money particles */}
             <div className="pointer-events-none absolute inset-0 z-20">
                 {coins.map((coin) => (
                     <motion.div
                         key={coin.id}
-                        variants={{
-                            rest: {
-                                opacity: 0,
-                                x: coin.x,
-                                y: coin.y,
-                                scale: 0.5,
-                            },
-
-                            hover: {
-                                opacity: [0, 1, 1, 0],
-
-                                x: [
-                                    coin.x,
-                                    coin.x + 30,
-                                    coin.x + 65,
-                                    0,
-                                ],
-
-                                y: [
-                                    coin.y,
-                                    coin.y - 8,
-                                    coin.y + 5,
-                                    0,
-                                ],
-
-                                scale: [
-                                    0.5,
-                                    0.9,
-                                    0.8,
-                                    0.2,
-                                ],
-                            },
-                        }}
+                        custom={coin}
+                        variants={coinVariants}
                         transition={{
                             duration: 1.05,
                             delay: coin.delay,
@@ -70,26 +83,16 @@ function MoneyFlowButton() {
                             ease: "easeInOut",
                         }}
                         className="
-                            absolute
-                            left-1/2
-                            top-1/2
-                            flex
-                            h-5
-                            w-5
-                            -translate-x-1/2
-                            -translate-y-1/2
-                            items-center
-                            justify-center
-                            rounded-full
-                            border
+                            absolute left-1/2 top-1/2
+                            flex h-5 w-5
+                            -translate-x-1/2 -translate-y-1/2
+                            items-center justify-center
+                            rounded-full border
                             border-orange-400/40
                             bg-orange-400/10
-                            text-[9px]
-                            font-bold
+                            text-[9px] font-bold
                             text-orange-500
                             shadow-[0_0_15px_rgba(249,115,22,0.25)]
-                            dark:border-orange-400/40
-                            dark:bg-orange-400/10
                             dark:text-orange-300
                         "
                     >
@@ -98,142 +101,73 @@ function MoneyFlowButton() {
                 ))}
             </div>
 
-            {/* ====================================================
-                BUTTON
-            ===================================================== */}
-
+            {/* CTA */}
             <Link
                 to="/sign-in"
                 className="
-                    group
-                    relative
-                    z-10
-                    flex
-                    h-11
-                    items-center
-                    justify-center
-                    overflow-hidden
-                    rounded-xl
-                    bg-zinc-950
-                    px-6
-                    text-sm
-                    font-semibold
-                    tracking-[-0.01em]
-                    text-white
-                    transition-all
-                    duration-300
+                    group relative z-10
+                    flex h-11 items-center justify-center
+                    overflow-hidden rounded-xl
+                    bg-zinc-950 px-6
+                    text-sm font-semibold
+                    tracking-[-0.01em] text-white
+                    transition-all duration-300
                     hover:-translate-y-0.5
                     hover:bg-zinc-900
                     hover:shadow-[0_14px_40px_rgba(249,115,22,0.18)]
-                    dark:bg-white
-                    dark:text-zinc-950
+                    dark:bg-white dark:text-zinc-950
                     dark:hover:bg-zinc-100
                     sm:h-12
                 "
             >
-                {/* ==================================================
-                    SHINE
-                =================================================== */}
-
+                {/* Shine */}
                 <motion.div
                     variants={{
-                        rest: {
-                            x: "-130%",
-                            opacity: 0,
-                        },
-
-                        hover: {
-                            x: "130%",
-                            opacity: 1,
-                        },
+                        rest: { x: "-130%", opacity: 0 },
+                        hover: { x: "130%", opacity: 1 },
                     }}
                     transition={{
                         duration: 0.7,
                         ease: "easeInOut",
                     }}
                     className="
-                        pointer-events-none
-                        absolute
-                        inset-y-0
-                        left-0
-                        w-1/3
-                        -skew-x-12
+                        pointer-events-none absolute inset-y-0 left-0
+                        w-1/3 -skew-x-12
                         bg-gradient-to-r
-                        from-transparent
-                        via-orange-400/30
-                        to-transparent
+                        from-transparent via-orange-400/30 to-transparent
                     "
                 />
 
-                {/* ==================================================
-                    DEFAULT TEXT
-                =================================================== */}
-
+                {/* Default label */}
                 <motion.span
-                    variants={{
-                        rest: {
-                            y: 0,
-                            opacity: 1,
-                        },
-
-                        hover: {
-                            y: -22,
-                            opacity: 0,
-                        },
-                    }}
-                    transition={{
-                        duration: 0.18,
-                    }}
-                    className="
-                        relative
-                        flex
-                        items-center
-                        gap-2
-                    "
+                    variants={buttonTextVariants}
+                    transition={{ duration: 0.18 }}
+                    className="relative flex items-center gap-2"
                 >
                     Start for free
 
                     <ArrowRight
                         size={15}
                         className="
-                            transition-transform
-                            duration-300
+                            transition-transform duration-300
                             group-hover:translate-x-1
                         "
                     />
                 </motion.span>
 
-                {/* ==================================================
-                    HOVER TEXT
-                =================================================== */}
-
+                {/* Hover label */}
                 <motion.span
-                    variants={{
-                        rest: {
-                            y: 22,
-                            opacity: 0,
-                        },
-
-                        hover: {
-                            y: 0,
-                            opacity: 1,
-                        },
-                    }}
+                    variants={hoverTextVariants}
                     transition={{
                         duration: 0.22,
                         delay: 0.03,
                     }}
                     className="
-                        absolute
-                        flex
-                        items-center
-                        gap-2
-                        text-orange-400
-                        dark:text-orange-600
+                        absolute flex items-center gap-2
+                        text-orange-400 dark:text-orange-600
                     "
                 >
                     Opportunity incoming
-
                     <Coins size={15} />
                 </motion.span>
             </Link>
@@ -241,28 +175,62 @@ function MoneyFlowButton() {
     );
 }
 
+
 /* ============================================================
-   HERO SECTION
+   Reusable atmospheric glow
+============================================================ */
+
+function FireGlow({
+    className = "",
+    dark = false,
+}: {
+    className?: string;
+    dark?: boolean;
+}) {
+    return (
+        <motion.div
+            className={`
+                pointer-events-none absolute left-1/2
+                -translate-x-1/2 rounded-[50%]
+                ${dark ? "hidden dark:block" : "dark:hidden"}
+                ${className}
+            `}
+            initial={
+                dark
+                    ? { opacity: 0, scale: 0.7 }
+                    : undefined
+            }
+            animate={
+                dark
+                    ? { opacity: 1, scale: 1 }
+                    : undefined
+            }
+            transition={
+                dark
+                    ? {
+                          duration: 1.6,
+                          delay: 0.1,
+                          ease: [0.16, 1, 0.3, 1],
+                      }
+                    : undefined
+            }
+        />
+    );
+}
+
+
+/* ============================================================
+   Hero section
 ============================================================ */
 
 function HeroSection() {
     const heroRef = useRef<HTMLElement | null>(null);
 
-    /*
-        Hero scroll progress:
-
-        0 = hero starts
-        1 = hero is leaving the viewport
-    */
-
+    // Scroll progress controls the background and content movement.
     const { scrollYProgress } = useScroll({
         target: heroRef,
         offset: ["start start", "end start"],
     });
-
-    /* ============================================================
-       ORANGE FIRE ATMOSPHERE MOVEMENT
-    ============================================================ */
 
     const orangeY = useTransform(
         scrollYProgress,
@@ -282,10 +250,6 @@ function HeroSection() {
         [1, 0.9, 0.55]
     );
 
-    /* ============================================================
-       HERO CONTENT MOVEMENT
-    ============================================================ */
-
     const contentY = useTransform(
         scrollYProgress,
         [0, 1],
@@ -298,67 +262,50 @@ function HeroSection() {
         [1, 0.8, 0]
     );
 
-    /* ============================================================
-       GRID MOVEMENT
-    ============================================================ */
-
     const gridY = useTransform(
         scrollYProgress,
         [0, 1],
         ["0px", "80px"]
     );
 
+    const fireStyle = {
+        y: orangeY,
+        scale: orangeScale,
+        opacity: orangeOpacity,
+    };
+
     return (
         <section
             ref={heroRef}
             className="
-                relative
-                z-0
-                h-[115svh]
-                min-h-[720px]
-                w-full
-                overflow-hidden
-                bg-white
-                text-zinc-950
-                transition-colors
-                duration-300
-                dark:bg-[#08090d]
-                dark:text-white
+                relative z-0
+                h-[115svh] min-h-[720px]
+                w-full overflow-hidden
+                bg-white text-zinc-950
+                transition-colors duration-300
+                dark:bg-[#08090d] dark:text-white
             "
         >
-            {/* ====================================================
-                STICKY HERO VIEWPORT
-            ===================================================== */}
-
             <div
                 className="
-                    sticky
-                    top-0
-                    h-[100svh]
-                    min-h-[680px]
+                    sticky top-0
+                    h-[100svh] min-h-[680px]
                     overflow-hidden
                 "
             >
                 {/* =================================================
-                    GRID BACKGROUND
-                ================================================== */}
+                    Background grid
+                ================================================= */}
 
                 <motion.div
                     style={{ y: gridY }}
-                    className="
-                        pointer-events-none
-                        absolute
-                        inset-0
-                    "
+                    className="pointer-events-none absolute inset-0"
                 >
-                    {/* LIGHT MODE GRID */}
-
+                    {/* Light grid */}
                     <div
                         className="
-                            absolute
-                            inset-0
-                            opacity-[0.42]
-                            dark:opacity-0
+                            absolute inset-0
+                            opacity-[0.42] dark:opacity-0
                         "
                         style={{
                             backgroundImage: `
@@ -381,15 +328,11 @@ function HeroSection() {
                         }}
                     />
 
-                    {/* DARK MODE GRID */}
-
+                    {/* Dark grid */}
                     <div
                         className="
-                            absolute
-                            inset-0
-                            hidden
-                            opacity-30
-                            dark:block
+                            absolute inset-0
+                            hidden opacity-30 dark:block
                         "
                         style={{
                             backgroundImage: `
@@ -413,225 +356,99 @@ function HeroSection() {
                     />
                 </motion.div>
 
-                {/* =================================================
-                    ORANGE FIRE ATMOSPHERIC SHAPE
-                ================================================== */}
 
-                {/* LIGHT MODE */}
+                {/* =================================================
+                    Orange atmospheric glow
+                ================================================= */}
 
                 <motion.div
-                    style={{
-                        y: orangeY,
-                        scale: orangeScale,
-                        opacity: orangeOpacity,
-                    }}
+                    style={fireStyle}
                     className="
-                        pointer-events-none
-                        absolute
-                        left-1/2
-                        top-[53%]
-                        z-[1]
-                        h-[58vw]
-                        w-[155vw]
-                        min-h-[460px]
-                        min-w-[1000px]
-                        -translate-x-1/2
-                        rounded-[50%]
+                        pointer-events-none absolute
+                        left-1/2 top-[53%] z-[1]
+                        h-[58vw] w-[155vw]
+                        min-h-[460px] min-w-[1000px]
+                        -translate-x-1/2 rounded-[50%]
+                        bg-[radial-gradient(ellipse_at_center,rgba(249,115,22,0.24)_0%,rgba(251,146,60,0.17)_20%,rgba(245,158,11,0.10)_40%,rgba(234,88,12,0.045)_57%,transparent_72%)]
                         blur-[18px]
-                        dark:hidden
-                        sm:blur-[22px]
+                        dark:hidden sm:blur-[22px]
                     "
-                >
-                    <div
-                        className="
-                            absolute
-                            inset-0
-                            rounded-[50%]
-                        "
-                        style={{
-                            background:
-                                "radial-gradient(ellipse at center, rgba(249,115,22,0.24) 0%, rgba(251,146,60,0.17) 20%, rgba(245,158,11,0.10) 40%, rgba(234,88,12,0.045) 57%, transparent 72%)",
-                        }}
-                    />
-                </motion.div>
-
-                {/* DARK MODE */}
+                />
 
                 <motion.div
-                    style={{
-                        y: orangeY,
-                        scale: orangeScale,
-                        opacity: orangeOpacity,
-                    }}
+                    style={fireStyle}
                     className="
-                        pointer-events-none
-                        absolute
-                        left-1/2
-                        top-[52%]
-                        z-[1]
-                        hidden
-                        h-[58vw]
-                        w-[155vw]
-                        min-h-[460px]
-                        min-w-[1000px]
-                        -translate-x-1/2
-                        rounded-[50%]
+                        pointer-events-none absolute
+                        left-1/2 top-[52%] z-[1]
+                        hidden h-[58vw] w-[155vw]
+                        min-h-[460px] min-w-[1000px]
+                        -translate-x-1/2 rounded-[50%]
+                        bg-[radial-gradient(ellipse_at_center,rgba(255,115,0,0.86)_0%,rgba(249,115,22,0.62)_21%,rgba(194,65,12,0.40)_41%,rgba(124,45,18,0.18)_57%,transparent_72%)]
                         blur-[16px]
-                        dark:block
-                        sm:blur-[20px]
+                        dark:block sm:blur-[20px]
                     "
-                >
-                    <div
-                        className="
-                            absolute
-                            inset-0
-                            rounded-[50%]
-                        "
-                        style={{
-                            background:
-                                "radial-gradient(ellipse at center, rgba(255,115,0,0.86) 0%, rgba(249,115,22,0.62) 21%, rgba(194,65,12,0.40) 41%, rgba(124,45,18,0.18) 57%, transparent 72%)",
-                        }}
-                    />
-                </motion.div>
+                />
+
 
                 {/* =================================================
-                    ORANGE FIRE LIGHT RIM
-                ================================================== */}
-
-                {/* LIGHT MODE RIM */}
+                    Orange light rim
+                ================================================= */}
 
                 <motion.div
-                    style={{
-                        y: orangeY,
-                        scale: orangeScale,
-                        opacity: orangeOpacity,
-                    }}
+                    style={fireStyle}
                     className="
-                        pointer-events-none
-                        absolute
-                        left-1/2
-                        top-[59%]
-                        z-[2]
-                        h-[25vw]
-                        w-[150vw]
-                        min-h-[210px]
-                        min-w-[980px]
-                        -translate-x-1/2
-                        rounded-[50%]
-                        border-t
-                        border-orange-400/35
+                        pointer-events-none absolute
+                        left-1/2 top-[59%] z-[2]
+                        h-[25vw] w-[150vw]
+                        min-h-[210px] min-w-[980px]
+                        -translate-x-1/2 rounded-[50%]
+                        border-t border-orange-400/35
                         bg-transparent
                         shadow-[0_-8px_45px_rgba(249,115,22,0.18)]
-                        blur-[1px]
-                        dark:hidden
+                        blur-[1px] dark:hidden
                     "
                 />
 
-                {/* DARK MODE RIM */}
-
                 <motion.div
-                    style={{
-                        y: orangeY,
-                        scale: orangeScale,
-                        opacity: orangeOpacity,
-                    }}
+                    style={fireStyle}
                     className="
-                        pointer-events-none
-                        absolute
-                        left-1/2
-                        top-[59%]
-                        z-[2]
-                        hidden
-                        h-[25vw]
-                        w-[150vw]
-                        min-h-[210px]
-                        min-w-[980px]
-                        -translate-x-1/2
-                        rounded-[50%]
-                        border-t
-                        border-orange-300/50
+                        pointer-events-none absolute
+                        left-1/2 top-[59%] z-[2]
+                        hidden h-[25vw] w-[150vw]
+                        min-h-[210px] min-w-[980px]
+                        -translate-x-1/2 rounded-[50%]
+                        border-t border-orange-300/50
                         bg-transparent
                         shadow-[0_-10px_55px_rgba(249,115,22,0.42)]
-                        blur-[1px]
-                        dark:block
+                        blur-[1px] dark:block
                     "
                 />
 
+
                 {/* =================================================
-                    CENTER FIRE GLOW
-                ================================================== */}
+                    Center glow
+                ================================================= */}
 
-                {/* LIGHT MODE */}
-
-                <motion.div
-                    initial={{
-                        opacity: 0,
-                        scale: 0.7,
-                    }}
-                    animate={{
-                        opacity: 1,
-                        scale: 1,
-                    }}
-                    transition={{
-                        duration: 1.6,
-                        delay: 0.1,
-                        ease: [0.16, 1, 0.3, 1],
-                    }}
+                <FireGlow
                     className="
-                        pointer-events-none
-                        absolute
-                        left-1/2
-                        top-[53%]
-                        z-0
-                        h-[420px]
-                        w-[700px]
-                        -translate-x-1/2
-                        -translate-y-1/2
-                        rounded-full
+                        top-[53%] z-0
+                        h-[420px] w-[700px]
                         bg-orange-400/[0.045]
                         blur-[120px]
-                        dark:hidden
                     "
                 />
 
-                {/* DARK MODE */}
-
-                <motion.div
-                    initial={{
-                        opacity: 0,
-                        scale: 0.7,
-                    }}
-                    animate={{
-                        opacity: 1,
-                        scale: 1,
-                    }}
-                    transition={{
-                        duration: 1.6,
-                        delay: 0.1,
-                        ease: [0.16, 1, 0.3, 1],
-                    }}
+                <FireGlow
+                    dark
                     className="
-                        pointer-events-none
-                        absolute
-                        left-1/2
-                        top-[53%]
-                        z-0
-                        hidden
-                        h-[420px]
-                        w-[700px]
-                        -translate-x-1/2
-                        -translate-y-1/2
-                        rounded-full
+                        top-[53%] z-0
+                        h-[420px] w-[700px]
                         bg-orange-500/[0.10]
                         blur-[120px]
-                        dark:block
                     "
                 />
 
-                {/* =================================================
-                    SMALL FIRE CORE
-                ================================================== */}
-
+                {/* Small animated fire core */}
                 <motion.div
                     initial={{
                         opacity: 0,
@@ -647,15 +464,10 @@ function HeroSection() {
                         ease: "easeOut",
                     }}
                     className="
-                        pointer-events-none
-                        absolute
-                        left-1/2
-                        top-[55%]
-                        z-[2]
-                        h-[150px]
-                        w-[420px]
-                        -translate-x-1/2
-                        -translate-y-1/2
+                        pointer-events-none absolute
+                        left-1/2 top-[55%] z-[2]
+                        h-[150px] w-[420px]
+                        -translate-x-1/2 -translate-y-1/2
                         rounded-full
                         bg-orange-400/[0.06]
                         blur-[80px]
@@ -663,9 +475,10 @@ function HeroSection() {
                     "
                 />
 
+
                 {/* =================================================
-                    HERO CONTENT
-                ================================================== */}
+                    Hero content
+                ================================================= */}
 
                 <motion.div
                     style={{
@@ -673,31 +486,14 @@ function HeroSection() {
                         opacity: contentOpacity,
                     }}
                     className="
-                        relative
-                        z-10
-                        mx-auto
-                        flex
-                        h-full
-                        w-full
-                        max-w-7xl
-                        flex-col
-                        items-center
-                        justify-center
-                        px-5
-                        pb-[8vh]
-                        text-center
-                        sm:px-8
+                        relative z-10 mx-auto
+                        flex h-full w-full max-w-7xl
+                        flex-col items-center justify-center
+                        px-5 pb-[8vh]
+                        text-center sm:px-8
                     "
                 >
-                    {/* =================================================
-                        EYEBROW
-                    ================================================== */}
-
-
-                    {/* =================================================
-                        HEADLINE
-                    ================================================== */}
-
+                    {/* Headline */}
                     <motion.h1
                         initial={{
                             opacity: 0,
@@ -738,41 +534,24 @@ function HeroSection() {
                         FIND BUSINESSES
                         <br />
 
-                        <span
-                            className="
-                                text-zinc-900
-                                dark:text-zinc-200
-                            "
-                        >
+                        <span className="text-zinc-900 dark:text-zinc-200">
                             WITH FYNDYRIX
                         </span>
                     </motion.h1>
 
-                    {/* =================================================
-                        DESCRIPTION
-                    ================================================== */}
 
+                    {/* Description */}
                     <motion.p
-                        initial={{
-                            opacity: 0,
-                            y: 16,
-                        }}
-                        animate={{
-                            opacity: 1,
-                            y: 0,
-                        }}
+                        {...entrance}
                         transition={{
-                            duration: 0.7,
+                            ...entranceTransition,
                             delay: 0.2,
                         }}
                         className="
-                            mt-7
-                            max-w-2xl
-                            text-sm
-                            leading-6
+                            mt-7 max-w-2xl
+                            text-sm leading-6
                             text-zinc-900
-                            sm:text-base
-                            sm:leading-7
+                            sm:text-base sm:leading-7
                             dark:text-zinc-400
                         "
                     >
@@ -781,33 +560,19 @@ function HeroSection() {
                         opportunities worth pursuing.
                     </motion.p>
 
-                    {/* =================================================
-                        BUTTONS
-                    ================================================== */}
 
+                    {/* CTA buttons */}
                     <motion.div
-                        initial={{
-                            opacity: 0,
-                            y: 16,
-                        }}
-                        animate={{
-                            opacity: 1,
-                            y: 0,
-                        }}
+                        {...entrance}
                         transition={{
-                            duration: 0.7,
+                            ...entranceTransition,
                             delay: 0.3,
                         }}
                         className="
-                            mt-7
-                            flex
-                            w-full
-                            flex-col
-                            items-center
-                            justify-center
-                            gap-2.5
-                            sm:w-auto
-                            sm:flex-row
+                            mt-7 flex w-full
+                            flex-col items-center
+                            justify-center gap-2.5
+                            sm:w-auto sm:flex-row
                         "
                     >
                         <MoneyFlowButton />
@@ -815,28 +580,20 @@ function HeroSection() {
                         <Link
                             to="/customers"
                             className="
-                                flex
-                                h-11
-                                w-full
-                                items-center
-                                justify-center
-                                rounded-xl
-                                border
+                                flex h-11 w-full
+                                items-center justify-center
+                                rounded-xl border
                                 border-zinc-200
-                                bg-white/70
-                                px-6
-                                text-sm
-                                font-semibold
+                                bg-white/70 px-6
+                                text-sm font-semibold
                                 text-zinc-800
                                 backdrop-blur-md
-                                transition-all
-                                duration-300
+                                transition-all duration-300
                                 hover:-translate-y-0.5
                                 hover:border-orange-200
                                 hover:bg-white
                                 hover:shadow-[0_12px_35px_rgba(249,115,22,0.08)]
-                                sm:h-12
-                                sm:w-auto
+                                sm:h-12 sm:w-auto
                                 dark:border-white/10
                                 dark:bg-white/[0.04]
                                 dark:text-zinc-200
@@ -848,38 +605,29 @@ function HeroSection() {
                         </Link>
                     </motion.div>
 
-                    {/* =================================================
-                        SUPPORTING TEXT
-                    ================================================== */}
 
-                    <motion.div
-                        initial={{
-                            opacity: 0,
-                        }}
-                        animate={{
-                            opacity: 1,
-                        }}
+                    {/* Supporting message */}
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         transition={{
                             duration: 0.7,
                             delay: 0.45,
                         }}
                         className="
                             mt-4
-                            text-[40px]
+                            text-[10px]
                             font-medium
                             uppercase
                             tracking-[0.16em]
                             text-zinc-900
-                            dark:text-zinc-200
+                            dark:text-zinc-500
                         "
                     >
                         Find the opportunity before
                         you make the pitch.
-                    </motion.div>
+                    </motion.p>
                 </motion.div>
-
-              
-
             </div>
         </section>
     );

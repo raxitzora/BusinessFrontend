@@ -1,18 +1,13 @@
-import {  useState } from "react";
+import { useState } from "react";
 import { Link, useParams, useOutletContext } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import toast from "react-hot-toast";
-import {
-    useMutation,
-    useQuery,
-} from "@tanstack/react-query";
-
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
     ArrowLeft,
     CheckCircle2,
     ExternalLink,
     Globe,
-    Loader2,
     MapPin,
     MessageSquare,
     Search,
@@ -23,6 +18,7 @@ import {
 import {
     getBusinessDetails,
     analyzeWebsite,
+    analyzeSEO,
     enrichBusiness,
     analyzeDigitalMarketing,
 } from "../../services/business.service";
@@ -34,101 +30,43 @@ function BusinessDetails() {
     const { id } = useParams();
     const { user } = useUser();
     const { theme } = useOutletContext();
-
     const userId = user?.id;
 
- const [activeTab, setActiveTab] = useState("overview");
+    const [activeTab, setActiveTab] = useState("overview");
 
+    const businessQuery = useQuery({
+        queryKey: ["business", userId, id],
+        enabled: Boolean(userId && id),
+        queryFn: async () => {
+            const response = await getBusinessDetails(id);
+            const existingBusiness = response?.business;
 
-/* =========================================================
-   BUSINESS DETAILS QUERY
-========================================================= */
+            if (!existingBusiness) {
+                throw new Error("Business not found.");
+            }
 
-const businessQuery = useQuery({
+            if (existingBusiness.phone && existingBusiness.website) {
+                return existingBusiness;
+            }
 
-  queryKey: ["business", userId, id],
-enabled: Boolean(userId && id),
+            try {
+                const enriched = await enrichBusiness(id);
+                return enriched?.business || existingBusiness;
+            } catch (enrichmentError) {
+                console.error("Business enrichment failed:", enrichmentError);
+                toast.error("Business loaded, but enrichment failed.");
+                return existingBusiness;
+            }
+        },
+    });
 
-    queryFn: async () => {
+    const business = businessQuery.data || null;
+    const loading = businessQuery.isPending;
 
-        const response = await getBusinessDetails(id);
-
-        const existingBusiness =
-            response?.business;
-
-        if (!existingBusiness) {
-            throw new Error("Business not found.");
-        }
-
-
-        /*
-         * If the business already has a website,
-         * no enrichment request is necessary.
-         */
-
-        if (existingBusiness.website) {
-            return existingBusiness;
-        }
-
-
-        /*
-         * Businesses without a website are enriched
-         * automatically.
-         */
-
-        try {
-
-            const enriched =
-                await enrichBusiness(id);
-
-            return (
-                enriched?.business ||
-                existingBusiness
-            );
-
-        } catch (enrichmentError) {
-
-            console.error(
-                "Business enrichment failed:",
-                enrichmentError
-            );
-
-            toast.error(
-                "Business loaded, but enrichment failed."
-            );
-
-            /*
-             * Enrichment failure should NOT make the
-             * entire business query fail.
-             */
-
-            return existingBusiness;
-        }
-
-    },
-
-});
-
-
-const business =
-    businessQuery.data || null;
-
-const loading =
-    businessQuery.isPending;
-
-  /* =========================================================
-   WEBSITE ANALYSIS MUTATION
-========================================================= */
-
-const websiteAnalysisMutation =
-    useMutation({
-
+    const websiteAnalysisMutation = useMutation({
         mutationFn: async () => {
-
             if (!business) {
-                throw new Error(
-                    "Business information is not available."
-                );
+                throw new Error("Business information is not available.");
             }
 
             if (!business.google_maps_link) {
@@ -138,101 +76,50 @@ const websiteAnalysisMutation =
             }
 
             return analyzeWebsite(
-                business.google_maps_link
-            );
-
+    business.google_maps_link
+);
         },
-
         onSuccess: (response) => {
-
             if (!response) {
-                toast.error(
-                    "The server returned an empty response."
-                );
-
+                toast.error("The server returned an empty response.");
                 return;
             }
-
 
             if (response.success === false) {
-
-                toast.error(
-                    response.message ||
-                    "Website analysis failed."
-                );
-
+                toast.error(response.message || "Website analysis failed.");
                 return;
             }
 
-
             if (response.partial === true) {
-
-                toast(
-                    "Website analysis completed partially."
-                );
-
+                toast("Website analysis completed partially.");
             } else {
-
-                toast.success(
-                    "Website analysis completed."
-                );
-
+                toast.success("Website analysis completed.");
             }
-
         },
-
         onError: (error) => {
-
-            console.error(
-                "Website analysis failed:",
-                error
-            );
-
-
-            const {
-                message,
-                code,
-            } = getRequestError(
+            console.error("Website analysis failed:", error);
+            const { message } = getRequestError(
                 error,
                 "Website analysis failed. Please try again.",
                 "REQUEST_FAILED"
             );
-
-
             toast.error(message);
-
         },
-
     });
 
-    const websiteAnalysis =
-    websiteAnalysisMutation.data || null;
+    const websiteAnalysis = websiteAnalysisMutation.data || null;
+    const websiteLoading = websiteAnalysisMutation.isPending;
 
-const websiteLoading =
-    websiteAnalysisMutation.isPending;
-
-  /* =========================================================
-   DIGITAL MARKETING ANALYSIS MUTATION
-========================================================= */
-
-const digitalMarketingMutation =
-    useMutation({
-
+    const digitalMarketingMutation = useMutation({
         mutationFn: async () => {
-
             if (!business?.website) {
                 throw new Error(
                     "This business does not have a website to analyze."
                 );
             }
 
-            const response =
-                await analyzeDigitalMarketing(
-                    business.website
-                );
-
-            const analysis =
-                response?.analysis || null;
+            const response = await analyzeDigitalMarketing(business.website);
+            const analysis = response?.analysis || null;
 
             if (!analysis) {
                 throw new Error(
@@ -241,45 +128,23 @@ const digitalMarketingMutation =
             }
 
             return analysis;
-
         },
-
         onSuccess: () => {
-
-            toast.success(
-                "Digital marketing analysis completed."
-            );
-
+            toast.success("Digital marketing analysis completed.");
         },
-
         onError: (error) => {
-
-            console.error(
-                "Digital marketing analysis failed:",
-                error
+            console.error("Digital marketing analysis failed:", error);
+            const { message } = getRequestError(
+                error,
+                "Digital marketing analysis failed. Please try again.",
+                "MARKETING_ANALYSIS_FAILED"
             );
-
-
-            const { message } =
-                getRequestError(
-                    error,
-                    "Digital marketing analysis failed. Please try again.",
-                    "MARKETING_ANALYSIS_FAILED"
-                );
-
-
             toast.error(message);
-
         },
-
     });
 
-
-const digitalMarketing =
-    digitalMarketingMutation.data || null;
-
-const marketingLoading =
-    digitalMarketingMutation.isPending;
+    const digitalMarketing = digitalMarketingMutation.data || null;
+    const marketingLoading = digitalMarketingMutation.isPending;
 
     const handleTabChange = (tab) => {
         setActiveTab(tab);
@@ -306,8 +171,7 @@ const marketingLoading =
                     </h1>
 
                     <p className="mt-2 text-[14px] leading-6 text-zinc-500 dark:text-[#777]">
-                        This business may have been removed
-                        or is no longer available.
+                        This business may have been removed or is no longer available.
                     </p>
 
                     <Link
@@ -334,11 +198,7 @@ const marketingLoading =
                             active:scale-[0.98]
                         "
                     >
-                        <ArrowLeft
-                            size={15}
-                            strokeWidth={1.8}
-                        />
-
+                        <ArrowLeft size={15} strokeWidth={1.8} />
                         Back to Search
                     </Link>
                 </div>
@@ -348,66 +208,58 @@ const marketingLoading =
 
     return (
         <div className="mx-auto w-full max-w-[1400px] space-y-6">
-            {/* Back */}
-           {/* Back Navigation */}
-<div className="flex flex-wrap items-center gap-4">
-    {/* Existing back button */}
-    <Link
-        to="/app/search"
-        className="
-            group
-            inline-flex
-            items-center
-            gap-2
-            text-[13px]
-            font-medium
-            tracking-[-0.01em]
-            text-zinc-500 dark:text-[#777]
-            transition-colors
-            duration-150
-            hover:text-zinc-900 dark:hover:text-white
-        "
-    >
-        <ArrowLeft
-            size={15}
-            strokeWidth={1.8}
-            className="transition-transform duration-150 group-hover:-translate-x-0.5"
-        />
+            <div className="flex flex-wrap items-center gap-4">
+                <Link
+                    to="/app/search"
+                    className="
+                        group
+                        inline-flex
+                        items-center
+                        gap-2
+                        text-[13px]
+                        font-medium
+                        tracking-[-0.01em]
+                        text-zinc-500 dark:text-[#777]
+                        transition-colors
+                        duration-150
+                        hover:text-zinc-900 dark:hover:text-white
+                    "
+                >
+                    <ArrowLeft
+                        size={15}
+                        strokeWidth={1.8}
+                        className="transition-transform duration-150 group-hover:-translate-x-0.5"
+                    />
+                    Back to Search
+                </Link>
 
-        Back to Search
-    </Link>
+                <Link
+                    to="/app/search?view=opportunities"
+                    className="
+                        group
+                        inline-flex
+                        items-center
+                        gap-2
+                        text-[13px]
+                        font-medium
+                        tracking-[-0.01em]
+                        text-zinc-500 dark:text-[#777]
+                        transition-colors
+                        duration-150
+                        hover:text-zinc-900 dark:hover:text-white
+                    "
+                >
+                    <ArrowLeft
+                        size={15}
+                        strokeWidth={1.8}
+                        className="transition-transform duration-150 group-hover:-translate-x-0.5"
+                    />
+                    Back to Business Opportunities
+                </Link>
+            </div>
 
-    {/* Business Opportunities back button */}
-    <Link
-        to="/app/search?view=opportunities"
-        className="
-            group
-            inline-flex
-            items-center
-            gap-2
-            text-[13px]
-            font-medium
-            tracking-[-0.01em]
-            text-zinc-500 dark:text-[#777]
-            transition-colors
-            duration-150
-            hover:text-zinc-900 dark:hover:text-white
-        "
-    >
-        <ArrowLeft
-            size={15}
-            strokeWidth={1.8}
-            className="transition-transform duration-150 group-hover:-translate-x-0.5"
-        />
-
-        Back to Business Opportunities
-    </Link>
-</div>
-
-            {/* Hero */}
             <BusinessHero business={business} theme={theme} />
 
-            {/* Tabs */}
             <div
                 role="tablist"
                 aria-label="Business analysis sections"
@@ -428,48 +280,39 @@ const marketingLoading =
             >
                 <TabButton
                     active={activeTab === "overview"}
-                    onClick={() =>
-                        handleTabChange("overview")
-                    }
+                    onClick={() => handleTabChange("overview")}
                     label="Overview"
                     theme={theme}
                 />
 
                 <TabButton
                     active={activeTab === "website"}
-                    onClick={() =>
-                        handleTabChange("website")
-                    }
+                    onClick={() => handleTabChange("website")}
                     label="Website Analysis"
                     theme={theme}
                 />
 
-            <TabButton
-    active={activeTab === "marketing"}
-    onClick={() => {
-
-        setActiveTab("marketing");
-
-        if (
-            !digitalMarketing &&
-            !digitalMarketingMutation.isPending &&
-            business?.website
-        ) {
-            digitalMarketingMutation.mutate();
-        }
-
-    }}
-    label="Digital Marketing"
-    theme={theme}
-/>
+                <TabButton
+                    active={activeTab === "marketing"}
+                    onClick={() => {
+                        setActiveTab("marketing");
+                        if (
+                            !digitalMarketing &&
+                            !digitalMarketingMutation.isPending &&
+                            business?.website
+                        ) {
+                            digitalMarketingMutation.mutate();
+                        }
+                    }}
+                    label="Digital Marketing"
+                    theme={theme}
+                />
             </div>
 
-            {/* Overview */}
             {activeTab === "overview" && (
                 <OverviewTab business={business} theme={theme} />
             )}
 
-            {/* Website Analysis */}
             {activeTab === "website" && (
                 <WebsiteAnalysisTab
                     business={business}
@@ -480,7 +323,6 @@ const marketingLoading =
                 />
             )}
 
-            {/* Digital Marketing */}
             {activeTab === "marketing" && (
                 <DigitalMarketingTab
                     business={business}
@@ -494,14 +336,10 @@ const marketingLoading =
     );
 }
 
-/*
-|--------------------------------------------------------------------------
-| Business Hero
-|--------------------------------------------------------------------------
-*/
-
-function BusinessHero({ business, theme }) {
-    const hasWebsite = Boolean(business.website);
+function BusinessHero({ business }) {
+    const hasWebsite = Boolean(
+    business.website
+);
 
     return (
         <section
@@ -556,11 +394,7 @@ function BusinessHero({ business, theme }) {
                                     text-emerald-600 dark:text-emerald-400
                                 "
                             >
-                                <CheckCircle2
-                                    size={12}
-                                    strokeWidth={1.9}
-                                />
-
+                                <CheckCircle2 size={12} strokeWidth={1.9} />
                                 Website available
                             </span>
                         ) : (
@@ -580,11 +414,7 @@ function BusinessHero({ business, theme }) {
                                     text-red-600 dark:text-red-400
                                 "
                             >
-                                <XCircle
-                                    size={12}
-                                    strokeWidth={1.9}
-                                />
-
+                                <XCircle size={12} strokeWidth={1.9} />
                                 No website
                             </span>
                         )}
@@ -603,8 +433,7 @@ function BusinessHero({ business, theme }) {
                             sm:text-[36px]
                         "
                     >
-                        {business.business_name ||
-                            "Unnamed Business"}
+                        {business.business_name || "Unnamed Business"}
                     </h1>
 
                     <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -626,12 +455,9 @@ function BusinessHero({ business, theme }) {
                                 strokeWidth={1.8}
                                 className="fill-amber-400 text-amber-600 dark:text-amber-400"
                             />
-
                             <span className="text-[13px] font-medium text-amber-700 dark:text-amber-100">
-                                {business.google_rating ??
-                                    "N/A"}
+                                {business.google_rating ?? "N/A"}
                             </span>
-
                             <span className="text-[12px] text-amber-600 dark:text-amber-400/50">
                                 rating
                             </span>
@@ -655,12 +481,9 @@ function BusinessHero({ business, theme }) {
                                 strokeWidth={1.8}
                                 className="text-blue-600 dark:text-blue-400"
                             />
-
                             <span className="text-[13px] font-medium text-blue-700 dark:text-blue-100">
-                                {business.review_count ??
-                                    0}
+                                {business.review_count ?? 0}
                             </span>
-
                             <span className="text-[12px] text-blue-600 dark:text-blue-400/50">
                                 reviews
                             </span>
@@ -696,13 +519,8 @@ function BusinessHero({ business, theme }) {
                                 active:scale-[0.98]
                             "
                         >
-                            <MapPin
-                                size={15}
-                                strokeWidth={1.8}
-                            />
-
+                            <MapPin size={15} strokeWidth={1.8} />
                             Open Maps
-
                             <ExternalLink
                                 size={13}
                                 strokeWidth={1.8}
@@ -716,34 +534,18 @@ function BusinessHero({ business, theme }) {
     );
 }
 
-/*
-|--------------------------------------------------------------------------
-| Overview
-|--------------------------------------------------------------------------
-*/
-
 function OverviewTab({ business, theme }) {
     return (
         <section className="space-y-5">
             <div>
-                <h2
-                    className="
-                        text-[20px]
-                        font-semibold
-                        tracking-[-0.025em]
-                        text-zinc-900 dark:text-white
-                    "
-                >
+                <h2 className="text-[20px] font-semibold tracking-[-0.025em] text-zinc-900 dark:text-white">
                     Business Information
                 </h2>
-
                 <p className="mt-1.5 text-[13px] leading-6 text-zinc-500 dark:text-[#777]">
-                    General information collected from Google
-                    Maps and business enrichment.
+                    General information collected from Google Maps and business enrichment.
                 </p>
             </div>
 
-            {/* Main information */}
             <div
                 className="
                     overflow-hidden
@@ -782,8 +584,7 @@ function OverviewTab({ business, theme }) {
                             </div>
 
                             <p className="break-words text-[14px] leading-7 text-zinc-700 dark:text-[#d5d5d5]">
-                                {business.address ||
-                                    "Not Available"}
+                                {business.address || "Not Available"}
                             </p>
                         </div>
                     </div>
@@ -791,10 +592,7 @@ function OverviewTab({ business, theme }) {
                     <div className="grid grid-cols-2">
                         <StatBlock
                             label="Rating"
-                            value={
-                                business.google_rating ??
-                                "N/A"
-                            }
+                            value={business.google_rating ?? "N/A"}
                             icon={
                                 <Star
                                     size={17}
@@ -808,9 +606,7 @@ function OverviewTab({ business, theme }) {
 
                         <StatBlock
                             label="Reviews"
-                            value={
-                                business.review_count ?? 0
-                            }
+                            value={business.review_count ?? 0}
                             icon={
                                 <MessageSquare
                                     size={17}
@@ -825,7 +621,6 @@ function OverviewTab({ business, theme }) {
                 </div>
             </div>
 
-            {/* Contact + Social */}
             <div className="grid gap-5 lg:grid-cols-2">
                 <InfoCard
                     title="Contact Information"
@@ -839,10 +634,7 @@ function OverviewTab({ business, theme }) {
                         color="blue"
                         theme={theme}
                         icon={
-                            <Globe
-                                size={15}
-                                strokeWidth={1.8}
-                            />
+                            <Globe size={15} strokeWidth={1.8} />
                         }
                     />
 
@@ -897,7 +689,6 @@ function OverviewTab({ business, theme }) {
                 </InfoCard>
             </div>
 
-            {/* Google Maps */}
             <div
                 className="
                     rounded-[12px]
@@ -939,8 +730,7 @@ function OverviewTab({ business, theme }) {
                         </div>
 
                         <p className="mt-3 text-[13px] leading-6 text-zinc-500 dark:text-[#777]">
-                            Open this business directly in
-                            Google Maps.
+                            Open this business directly in Google Maps.
                         </p>
                     </div>
 
@@ -978,17 +768,9 @@ function OverviewTab({ business, theme }) {
                             active:scale-[0.98]
                         "
                     >
-                        <MapPin
-                            size={15}
-                            strokeWidth={1.8}
-                        />
-
+                        <MapPin size={15} strokeWidth={1.8} />
                         Open in Google Maps
-
-                        <ExternalLink
-                            size={13}
-                            strokeWidth={1.8}
-                        />
+                        <ExternalLink size={13} strokeWidth={1.8} />
                     </a>
                 ) : (
                     <p className="mt-5 text-[13px] text-zinc-400 dark:text-[#555]">
@@ -1000,12 +782,6 @@ function OverviewTab({ business, theme }) {
     );
 }
 
-/*
-|--------------------------------------------------------------------------
-| Website Analysis
-|--------------------------------------------------------------------------
-*/
-
 function WebsiteAnalysisTab({
     business,
     websiteAnalysis,
@@ -1013,16 +789,10 @@ function WebsiteAnalysisTab({
     onAnalyze,
     theme,
 }) {
-    const hasGoogleMapsLink =
-        Boolean(business.google_maps_link);
-
+    const hasGoogleMapsLink = Boolean(business.google_maps_link);
     const hasResult = Boolean(websiteAnalysis);
-
-    const hasFailed =
-        websiteAnalysis?.success === false;
-
-    const showAnalysisPrompt =
-        !hasResult && !websiteLoading;
+    const hasFailed = websiteAnalysis?.success === false;
+    const showAnalysisPrompt = !hasResult && !websiteLoading;
 
     return (
         <section className="space-y-5">
@@ -1067,12 +837,6 @@ function WebsiteAnalysisTab({
     );
 }
 
-/*
-|--------------------------------------------------------------------------
-| Digital Marketing
-|--------------------------------------------------------------------------
-*/
-
 function DigitalMarketingTab({
     business,
     digitalMarketing,
@@ -1080,11 +844,10 @@ function DigitalMarketingTab({
     onAnalyze,
     theme,
 }) {
-    const hasWebsite = Boolean(business.website);
-
-    const showPrompt =
-        !digitalMarketing &&
-        !marketingLoading;
+    const hasWebsite = Boolean(
+    business.website
+);
+    const showPrompt = !digitalMarketing && !marketingLoading;
 
     return (
         <section className="space-y-5">
@@ -1113,12 +876,6 @@ function DigitalMarketingTab({
     );
 }
 
-/*
-|--------------------------------------------------------------------------
-| Analysis Start Card
-|--------------------------------------------------------------------------
-*/
-
 function AnalysisStartCard({
     title,
     description,
@@ -1126,7 +883,6 @@ function AnalysisStartCard({
     disabled,
     onClick,
     type,
-    theme,
 }) {
     const isMarketing = type === "marketing";
 
@@ -1212,19 +968,12 @@ function AnalysisStartCard({
                     "
                 >
                     {buttonLabel}
-
                     {!disabled && <ArrowRightIcon />}
                 </button>
             </div>
         </div>
     );
 }
-
-/*
-|--------------------------------------------------------------------------
-| Arrow Right
-|--------------------------------------------------------------------------
-*/
 
 function ArrowRightIcon() {
     return (
@@ -1246,38 +995,23 @@ function ArrowRightIcon() {
     );
 }
 
-/*
-|--------------------------------------------------------------------------
-| Stat Block
-|--------------------------------------------------------------------------
-*/
-
-function StatBlock({
-    label,
-    value,
-    icon,
-    color = "gray",
-    theme,
-}) {
+function StatBlock({ label, value, icon, color = "gray" }) {
     const styles = {
         amber: {
             icon: "text-amber-600 dark:text-amber-400",
             label: "text-amber-600 dark:text-amber-400/60",
             value: "text-amber-700 dark:text-amber-100",
         },
-
         blue: {
             icon: "text-blue-600 dark:text-blue-400",
             label: "text-blue-600 dark:text-blue-400/60",
             value: "text-blue-700 dark:text-blue-100",
         },
-
         green: {
             icon: "text-emerald-600 dark:text-emerald-400",
             label: "text-emerald-600 dark:text-emerald-400/60",
             value: "text-emerald-100",
         },
-
         gray: {
             icon: "text-[#888]",
             label: "text-zinc-500 dark:text-[#666]",
@@ -1285,8 +1019,7 @@ function StatBlock({
         },
     };
 
-    const selected =
-        styles[color] || styles.gray;
+    const selected = styles[color] || styles.gray;
 
     return (
         <div
@@ -1305,10 +1038,7 @@ function StatBlock({
             "
         >
             <div className="flex items-center gap-2">
-                <span className={selected.icon}>
-                    {icon}
-                </span>
-
+                <span className={selected.icon}>{icon}</span>
                 <span
                     className={`
                         text-[11px]
@@ -1337,18 +1067,7 @@ function StatBlock({
     );
 }
 
-/*
-|--------------------------------------------------------------------------
-| Info Card
-|--------------------------------------------------------------------------
-*/
-
-function InfoCard({
-    title,
-    description,
-    children,
-    theme,
-}) {
+function InfoCard({ title, description, children }) {
     return (
         <div
             className="
@@ -1366,72 +1085,51 @@ function InfoCard({
                 <h3 className="text-[15px] font-semibold tracking-[-0.015em] text-zinc-900 dark:text-white">
                     {title}
                 </h3>
-
                 <p className="mt-1.5 text-[12px] leading-5 text-zinc-500 dark:text-[#666]">
                     {description}
                 </p>
             </div>
 
-            <div className="px-6">
-                {children}
-            </div>
+            <div className="px-6">{children}</div>
         </div>
     );
 }
 
-/*
-|--------------------------------------------------------------------------
-| Loading Skeleton
-|--------------------------------------------------------------------------
-*/
-
-function BusinessDetailsSkeleton({ theme }) {
+function BusinessDetailsSkeleton() {
     return (
         <div
             className="mx-auto w-full max-w-[1400px] space-y-6"
             aria-busy="true"
             aria-label="Loading business details"
         >
-            {/* Back */}
             <div className="h-5 w-28 animate-pulse rounded bg-zinc-200 dark:bg-[#202020]" />
 
-            {/* Hero */}
             <div className="rounded-[14px] border border-zinc-200 dark:border-[#242424] bg-white dark:bg-[#101010] p-6 sm:p-8">
                 <div className="h-5 w-24 animate-pulse rounded-full bg-zinc-200 dark:bg-[#202020]" />
-
                 <div className="mt-5 h-10 w-full max-w-xl animate-pulse rounded-[8px] bg-zinc-200 dark:bg-[#202020]" />
-
                 <div className="mt-6 flex gap-3">
                     <div className="h-9 w-24 animate-pulse rounded-[8px] bg-zinc-200 dark:bg-[#202020]" />
-
                     <div className="h-9 w-28 animate-pulse rounded-[8px] bg-zinc-200 dark:bg-[#202020]" />
                 </div>
             </div>
 
-            {/* Tabs */}
             <div className="flex h-[50px] gap-2 rounded-[11px] border border-zinc-200 dark:border-[#242424] bg-white dark:bg-[#101010] p-1.5">
                 <div className="h-full w-24 animate-pulse rounded-[8px] bg-zinc-200 dark:bg-[#202020]" />
-
                 <div className="h-full w-32 animate-pulse rounded-[8px] bg-zinc-200 dark:bg-[#202020]" />
-
                 <div className="h-full w-36 animate-pulse rounded-[8px] bg-zinc-200 dark:bg-[#202020]" />
             </div>
 
-            {/* Content */}
             <div className="space-y-5">
                 <div>
                     <div className="h-7 w-56 animate-pulse rounded bg-zinc-200 dark:bg-[#202020]" />
-
                     <div className="mt-2 h-4 w-80 animate-pulse rounded bg-zinc-100 dark:bg-[#191919]" />
                 </div>
 
                 <div className="overflow-hidden rounded-[12px] border border-zinc-200 dark:border-[#242424] bg-white dark:bg-[#101010]">
                     <div className="grid lg:grid-cols-2">
                         <div className="h-40 animate-pulse border-b border-zinc-200 dark:border-[#242424] bg-zinc-100 dark:bg-[#111] lg:border-b-0 lg:border-r" />
-
                         <div className="grid grid-cols-2">
                             <div className="h-40 animate-pulse border-b border-zinc-200 dark:border-[#242424] bg-zinc-100 dark:bg-[#111]" />
-
                             <div className="h-40 animate-pulse border-b border-zinc-200 dark:border-[#242424] bg-zinc-100 dark:bg-[#111]" />
                         </div>
                     </div>
@@ -1439,7 +1137,6 @@ function BusinessDetailsSkeleton({ theme }) {
 
                 <div className="grid gap-5 lg:grid-cols-2">
                     <div className="h-64 animate-pulse rounded-[12px] border border-zinc-200 dark:border-[#242424] bg-white dark:bg-[#101010]" />
-
                     <div className="h-64 animate-pulse rounded-[12px] border border-zinc-200 dark:border-[#242424] bg-white dark:bg-[#101010]" />
                 </div>
 
@@ -1449,18 +1146,7 @@ function BusinessDetailsSkeleton({ theme }) {
     );
 }
 
-/*
-|--------------------------------------------------------------------------
-| Tab Button
-|--------------------------------------------------------------------------
-*/
-
-function TabButton({
-    active,
-    onClick,
-    label,
-    theme,
-}) {
+function TabButton({ active, onClick, label, theme }) {
     return (
         <button
             type="button"
@@ -1494,20 +1180,7 @@ function TabButton({
     );
 }
 
-/*
-|--------------------------------------------------------------------------
-| Information Row
-|--------------------------------------------------------------------------
-*/
-
-function InfoRow({
-    label,
-    value,
-    link,
-    icon,
-    color = "gray",
-    theme,
-}) {
+function InfoRow({ label, value, link, icon, color = "gray" }) {
     const colorStyles = {
         blue: {
             icon: "border-blue-200 dark:border-blue-500/20 bg-blue-50 dark:bg-blue-500/[0.08] text-blue-600 dark:text-blue-400",
@@ -1515,42 +1188,36 @@ function InfoRow({
             value: "text-blue-700 dark:text-blue-100",
             hover: "group-hover:text-blue-700 dark:group-hover:text-blue-300",
         },
-
         green: {
             icon: "border-emerald-200 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/[0.08] text-emerald-600 dark:text-emerald-400",
             label: "text-emerald-700 dark:text-emerald-300",
             value: "text-emerald-100",
             hover: "group-hover:text-emerald-700 dark:group-hover:text-emerald-300",
         },
-
         amber: {
             icon: "border-amber-200 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-500/[0.08] text-amber-600 dark:text-amber-400",
             label: "text-amber-700 dark:text-amber-300",
             value: "text-amber-700 dark:text-amber-100",
             hover: "group-hover:text-amber-700 dark:group-hover:text-amber-300",
         },
-
         pink: {
             icon: "border-pink-200 dark:border-pink-500/20 bg-pink-50 dark:bg-pink-500/[0.08] text-pink-400",
             label: "text-pink-300",
             value: "text-pink-100",
             hover: "group-hover:text-pink-600 dark:group-hover:text-pink-300",
         },
-
         red: {
             icon: "border-red-200 dark:border-red-500/20 bg-red-50 dark:bg-red-500/[0.08] text-red-600 dark:text-red-400",
             label: "text-red-600 dark:text-red-300",
             value: "text-red-100",
             hover: "group-hover:text-red-600 dark:group-hover:text-red-300",
         },
-
         indigo: {
             icon: "border-indigo-200 dark:border-indigo-500/20 bg-indigo-50 dark:bg-indigo-500/[0.08] text-indigo-400",
             label: "text-indigo-300",
             value: "text-indigo-100",
             hover: "group-hover:text-indigo-600 dark:group-hover:text-indigo-300",
         },
-
         gray: {
             icon: "border-[#2c2c2c] bg-zinc-50 dark:bg-[#171717] text-[#999]",
             label: "text-zinc-500 dark:text-[#666]",
@@ -1559,8 +1226,7 @@ function InfoRow({
         },
     };
 
-    const styles =
-        colorStyles[color] || colorStyles.gray;
+    const styles = colorStyles[color] || colorStyles.gray;
 
     return (
         <div
@@ -1579,7 +1245,6 @@ function InfoRow({
                 hover:bg-white/[0.015]
             "
         >
-            {/* Icon */}
             <div
                 className={`
                     flex
@@ -1598,7 +1263,6 @@ function InfoRow({
                 {icon}
             </div>
 
-            {/* Label */}
             <span
                 className={`
                     w-[70px]
@@ -1613,7 +1277,6 @@ function InfoRow({
                 {label}
             </span>
 
-            {/* Value */}
             <div className="min-w-0 flex-1 text-right">
                 {!value ? (
                     <span className="text-[12px] text-zinc-400 dark:text-[#4f4f4f]">
@@ -1640,10 +1303,7 @@ function InfoRow({
                         "
                         title={value}
                     >
-                        <span className="truncate">
-                            Visit
-                        </span>
-
+                        <span className="truncate">Visit</span>
                         <ExternalLink
                             size={12}
                             strokeWidth={1.7}
@@ -1675,12 +1335,6 @@ function InfoRow({
     );
 }
 
-/*
-|--------------------------------------------------------------------------
-| Phone Icon
-|--------------------------------------------------------------------------
-*/
-
 function PhoneIcon() {
     return (
         <svg
@@ -1701,12 +1355,6 @@ function PhoneIcon() {
     );
 }
 
-/*
-|--------------------------------------------------------------------------
-| Mail Icon
-|--------------------------------------------------------------------------
-*/
-
 function MailIcon() {
     return (
         <svg
@@ -1725,7 +1373,6 @@ function MailIcon() {
                 stroke="currentColor"
                 strokeWidth="1.6"
             />
-
             <path
                 d="M4 7L10.94 12.21C11.57 12.68 12.43 12.68 13.06 12.21L20 7"
                 stroke="currentColor"
@@ -1736,12 +1383,6 @@ function MailIcon() {
         </svg>
     );
 }
-
-/*
-|--------------------------------------------------------------------------
-| Instagram Icon
-|--------------------------------------------------------------------------
-*/
 
 function InstagramIcon() {
     return (
@@ -1761,7 +1402,6 @@ function InstagramIcon() {
                 stroke="currentColor"
                 strokeWidth="1.7"
             />
-
             <circle
                 cx="12"
                 cy="12"
@@ -1769,22 +1409,10 @@ function InstagramIcon() {
                 stroke="currentColor"
                 strokeWidth="1.7"
             />
-
-            <circle
-                cx="17.3"
-                cy="6.7"
-                r="1"
-                fill="currentColor"
-            />
+            <circle cx="17.3" cy="6.7" r="1" fill="currentColor" />
         </svg>
     );
 }
-
-/*
-|--------------------------------------------------------------------------
-| Facebook Icon
-|--------------------------------------------------------------------------
-*/
 
 function FacebookIcon() {
     return (
@@ -1802,12 +1430,6 @@ function FacebookIcon() {
         </svg>
     );
 }
-
-/*
-|--------------------------------------------------------------------------
-| LinkedIn Icon
-|--------------------------------------------------------------------------
-*/
 
 function LinkedInIcon() {
     return (
@@ -1827,28 +1449,19 @@ function LinkedInIcon() {
                 stroke="currentColor"
                 strokeWidth="1.6"
             />
-
             <path
                 d="M8 10V16"
                 stroke="currentColor"
                 strokeWidth="1.7"
                 strokeLinecap="round"
             />
-
-            <circle
-                cx="8"
-                cy="7.5"
-                r="1"
-                fill="currentColor"
-            />
-
+            <circle cx="8" cy="7.5" r="1" fill="currentColor" />
             <path
                 d="M12 16V12.8C12 11.25 13 10 14.5 10C16 10 17 11.25 17 12.8V16"
                 stroke="currentColor"
                 strokeWidth="1.7"
                 strokeLinecap="round"
             />
-
             <path
                 d="M12 13V16"
                 stroke="currentColor"
@@ -1858,12 +1471,6 @@ function LinkedInIcon() {
         </svg>
     );
 }
-
-/*
-|--------------------------------------------------------------------------
-| Marketing Icon
-|--------------------------------------------------------------------------
-*/
 
 function MarketingIcon() {
     return (
@@ -1881,7 +1488,6 @@ function MarketingIcon() {
                 strokeWidth="1.6"
                 strokeLinecap="round"
             />
-
             <path
                 d="M4 6C7 4 9 8 12 6C15 4 17 6 20 5V14C17 15 15 13 12 15C9 17 7 13 4 15"
                 stroke="currentColor"
@@ -1889,7 +1495,6 @@ function MarketingIcon() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
             />
-
             <path
                 d="M4 19H20"
                 stroke="currentColor"
@@ -1900,37 +1505,17 @@ function MarketingIcon() {
     );
 }
 
-/*
-|--------------------------------------------------------------------------
-| Request Error Helper
-|--------------------------------------------------------------------------
-*/
-
-function getRequestError(
-    error,
-    fallbackMessage,
-    fallbackCode
-) {
+function getRequestError(error, fallbackMessage, fallbackCode) {
     if (error?.response?.data) {
         return {
-            message:
-                error.response.data.message ||
-                fallbackMessage,
-
-            code:
-                error.response.data.code ||
-                fallbackCode,
+            message: error.response.data.message || fallbackMessage,
+            code: error.response.data.code || fallbackCode,
         };
     }
 
-    if (
-        error?.code === "ECONNABORTED" ||
-        error?.code === "ETIMEDOUT"
-    ) {
+    if (error?.code === "ECONNABORTED" || error?.code === "ETIMEDOUT") {
         return {
-            message:
-                "The request is taking too long. Please try again.",
-
+            message: "The request is taking too long. Please try again.",
             code: "REQUEST_TIMEOUT",
         };
     }

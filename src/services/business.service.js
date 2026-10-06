@@ -7,6 +7,7 @@ import api from "./axios";
 */
 
 
+
 export const searchBusinesses = async (
     keyword,
     location,
@@ -108,6 +109,17 @@ export const analyzeDigitalMarketing = async (
 
     return data;
 
+};
+
+export const analyzeSEO = async (
+    googleMapsLink
+) => {
+    const { data } = await api.post(
+        "/seo-analysis",
+        { googleMapsLink }
+    );
+
+    return data;
 };
 
 /*

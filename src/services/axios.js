@@ -14,13 +14,38 @@ export const setTokenGetter = (getToken) => {
 
 api.interceptors.request.use(
     async (config) => {
+
+        console.log(
+            "Axios getTokenFunction:",
+            !!getTokenFunction
+        );
+
         if (getTokenFunction) {
-            const token = await getTokenFunction();
+
+            const token =
+                await getTokenFunction();
+
+            console.log(
+                "Axios token exists:",
+                !!token
+            );
 
             if (token) {
-                config.headers.Authorization = `Bearer ${token}`;
+
+                config.headers =
+                    config.headers || {};
+
+                config.headers.Authorization =
+                    `Bearer ${token}`;
+
             }
+
         }
+
+        console.log(
+            "Authorization exists:",
+            !!config.headers?.Authorization
+        );
 
         return config;
     },
