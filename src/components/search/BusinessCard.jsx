@@ -746,10 +746,10 @@ function WebsiteStatus({
 }) {
     const isDark = theme === "dark";
 
-    if (
-        business.contactStatus === "pending" ||
-        business.contactStatus === "checking"
-    ) {
+ if (
+    business.websiteStatus === "pending" ||
+    business.websiteStatus === "checking"
+) {
         return (
             <div
                 className={`
@@ -788,7 +788,7 @@ function WebsiteStatus({
         );
     }
 
-    if (business.contactStatus === "failed") {
+if (business.websiteStatus === "failed") {
         return (
             <div
                 className={`

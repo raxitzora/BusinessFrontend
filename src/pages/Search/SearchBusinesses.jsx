@@ -131,87 +131,123 @@ const enrichBusinesses = async (businessList) => {
 
     const CONCURRENCY = 5;
 
-    const enrichOne = async (business) => {
-        if (!business.id) {
-            return;
-        }
-
+    const updateBusiness = (businessId, updates) => {
         setBusinesses((previous) =>
             previous.map((item) =>
-                Number(item.id) === Number(business.id)
+                Number(item.id) === Number(businessId)
                     ? {
                         ...item,
-                        contactStatus: "checking",
-                        websiteStatus: "checking",
+                        ...updates,
                     }
                     : item
             )
         );
+    };
 
-        try {
-            const response =
-                await enrichBusiness(business.id);
+const enrichOne = async (business) => {
+    if (!business?.id) {
+        return;
+    }
 
-            const enrichedBusiness =
-                response?.business;
+    const businessId = business.id;
 
-            if (!enrichedBusiness) {
+    updateBusiness(businessId, {
+        contactStatus: business.phone
+            ? "done"
+            : "checking",
+
+        websiteStatus: business.website
+            ? "done"
+            : "checking",
+    });
+
+    try {
+        const response = await enrichBusiness(businessId);
+        const enrichedBusiness = response?.business;
+
+        if (!enrichedBusiness) {
+            console.warn(
+                `[Enrichment] No business data returned for ${businessId}`
+            );
+
+            updateBusiness(businessId, {
+                contactStatus: business.phone
+                    ? "done"
+                    : "no-phone",
+
+                websiteStatus: business.website
+                    ? "done"
+                    : "no-website",
+            });
+
+            return;
+        }
+
+        const hasPhone = Boolean(
+            enrichedBusiness.phone
+        );
+
+        const hasWebsite = Boolean(
+            enrichedBusiness.website
+        );
+
+        updateBusiness(businessId, {
+            ...enrichedBusiness,
+
+            contactStatus: hasPhone
+                ? "done"
+                : "no-phone",
+
+            websiteStatus: hasWebsite
+                ? "done"
+                : "no-website",
+        });
+
+    } catch (error) {
+        console.error(
+            `[Enrichment] Request failed for ${business.business_name}:`,
+            error?.response?.data || error?.message || error
+        );
+
+        // Preserve already-known data.
+        // A missing contact/website is NOT a failed enrichment.
+        updateBusiness(businessId, {
+            contactStatus: business.phone
+                ? "done"
+                : "no-phone",
+
+            websiteStatus: business.website
+                ? "done"
+                : "no-website",
+        });
+    }
+};
+
+    const queue = [...businessList];
+
+    const worker = async () => {
+        while (queue.length > 0) {
+            const business = queue.shift();
+
+            if (!business) {
                 return;
             }
 
-            setBusinesses((previous) =>
-                previous.map((item) =>
-                    Number(item.id) === Number(business.id)
-                        ? {
-                            ...item,
-                            ...enrichedBusiness,
-                            contactStatus:
-                                enrichedBusiness.phone
-                                    ? "done"
-                                    : "no-phone",
-                            websiteStatus:
-                                enrichedBusiness.websiteExists === true
-                                    ? "done"
-                                    : "no-website",
-                        }
-                        : item
-                )
-            );
-        } catch (error) {
-            console.error(
-                `Enrichment failed for ${business.business_name}:`,
-                error?.response?.data || error
-            );
-
-            setBusinesses((previous) =>
-                previous.map((item) =>
-                    Number(item.id) === Number(business.id)
-                        ? {
-                            ...item,
-                            contactStatus: "failed",
-                            websiteStatus: "failed",
-                        }
-                        : item
-                )
-            );
+            await enrichOne(business);
         }
     };
 
-    for (
-        let start = 0;
-        start < businessList.length;
-        start += CONCURRENCY
-    ) {
-        const batch =
-            businessList.slice(
-                start,
-                start + CONCURRENCY
-            );
+    const workers = Array.from(
+        {
+            length: Math.min(
+                CONCURRENCY,
+                businessList.length
+            ),
+        },
+        () => worker()
+    );
 
-        await Promise.all(
-            batch.map(enrichOne)
-        );
-    }
+    await Promise.all(workers);
 };
 
     /*
@@ -299,19 +335,23 @@ const enrichBusinesses = async (businessList) => {
                     : []
             );
 
-       const restoredBusinesses =
+     const restoredBusinesses =
     parsed.businesses.map((business) => ({
         ...business,
+
         websiteStatus:
-            business.websiteStatus ||
-            (business.website
+            business.website
                 ? "done"
-                : "no-website"),
+                : business.websiteStatus === "no-website"
+                    ? "no-website"
+                    : "checking",
+
         contactStatus:
-            business.contactStatus ||
-            (business.phone
+            business.phone
                 ? "done"
-                : "no-phone"),
+                : business.contactStatus === "no-phone"
+                    ? "no-phone"
+                    : "checking",
     }));
 
 setBusinesses(
@@ -330,7 +370,7 @@ setTotalPages(
     parsed.totalPages || 1
 );
 
-return true;
+return restoredBusinesses;
         } catch (error) {
             console.error(
                 "Failed to restore search state:",
@@ -580,17 +620,33 @@ return true;
     | Initial Page Load
     |--------------------------------------------------------------------------
     */
+useEffect(() => {
+    if (!user?.id) {
+        return;
+    }
 
-    useEffect(() => {
-        if (!user?.id) {
-            return;
-        }
+    loadSavedLeads();
 
-        loadSavedLeads();
+    const restoredBusinesses =
         restoreSearchState();
-    }, [
-        user?.id,
-    ]);
+
+    if (Array.isArray(restoredBusinesses)) {
+        const businessesToEnrich =
+            restoredBusinesses.filter(
+                (business) =>
+                    !business.phone ||
+                    !business.website
+            );
+
+        if (businessesToEnrich.length) {
+            enrichBusinesses(
+                businessesToEnrich
+            );
+        }
+    }
+}, [
+    user?.id,
+]);
 
     /*
     |--------------------------------------------------------------------------
@@ -714,25 +770,25 @@ return true;
                 return;
             }
 
-            setSearchStage(4);
+         const foundBusinesses =
+    (
+        response.businesses ||
+        []
+    ).map(
+        (business) => ({
+            ...business,
 
-            const foundBusinesses =
-                (
-                    response.businesses ||
-                    []
-                ).map(
-                    (business) => ({
-                        ...business,
-                       websiteStatus:
-    business.websiteExists === true
-        ? "done"
-        : "pending",
-                        contactStatus:
-                            business.phone
-                                ? "done"
-                                : "pending",
-                    })
-                );
+            websiteStatus:
+                business.website
+                    ? "done"
+                    : "checking",
+
+            contactStatus:
+                business.phone
+                    ? "done"
+                    : "checking",
+        })
+    );
 
             setKeyword(
                 trimmedKeyword
@@ -817,11 +873,11 @@ return true;
             |
             */
 
-         const businessesToEnrich =
+     const businessesToEnrich =
     foundBusinesses.filter(
         (business) =>
             !business.phone ||
-            business.websiteExists === undefined
+            !business.website
     );
 
             if (

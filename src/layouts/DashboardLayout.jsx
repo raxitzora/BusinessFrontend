@@ -234,7 +234,7 @@ const scrollPositionsRef = useRef({});
                                 }
                             `}
                         >
-                            LeadFlow
+                            Fyndyrix
                         </span>
                     </div>
                 </div>

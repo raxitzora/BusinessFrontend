@@ -34,7 +34,7 @@ function Topbar({ theme, setTheme }) {
     }, []);
 
     const title =
-        pageTitles[pathname] || "LeadFlow";
+        pageTitles[pathname] || "Welcome To FYNDYRIX";
 
     const isDark =
         theme === "dark";

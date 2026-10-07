@@ -25,7 +25,7 @@ import {
 
 import WebsiteAnalysis from "../../components/analysis/WebsiteAnalysis";
 import DigitalMarketingAnalysis from "../../components/analysis/DigitalMarketingAnalysis";
-
+import SEOAnalysis from "../../components/analysis/SeoAnalysis";
 function BusinessDetails() {
     const { id } = useParams();
     const { user } = useUser();
@@ -145,6 +145,65 @@ function BusinessDetails() {
 
     const digitalMarketing = digitalMarketingMutation.data || null;
     const marketingLoading = digitalMarketingMutation.isPending;
+    const seoAnalysisMutation = useMutation({
+
+    mutationFn: async () => {
+
+        if (!business?.website) {
+            throw new Error(
+                "This business does not have a website to analyze."
+            );
+        }
+
+        const response = await analyzeSEO(
+            business.google_maps_link
+        );
+
+        if (!response) {
+            throw new Error(
+                "The server returned no SEO analysis."
+            );
+        }
+
+        return response;
+    },
+
+    onSuccess: (response) => {
+
+        if (response.success === false) {
+            toast.error(
+                response.message ||
+                "SEO analysis failed."
+            );
+
+            return;
+        }
+
+        toast.success(
+            "SEO analysis completed."
+        );
+    },
+
+    onError: (error) => {
+
+        console.error(
+            "SEO analysis failed:",
+            error
+        );
+
+        toast.error(
+            error.message ||
+            "SEO analysis failed. Please try again."
+        );
+    },
+
+});
+
+const seoAnalysis =
+    seoAnalysisMutation.data || null;
+
+const seoLoading =
+    seoAnalysisMutation.isPending;
 
     const handleTabChange = (tab) => {
         setActiveTab(tab);
@@ -307,6 +366,25 @@ function BusinessDetails() {
                     label="Digital Marketing"
                     theme={theme}
                 />
+
+                <TabButton
+    active={activeTab === "seo"}
+    onClick={() => {
+
+        setActiveTab("seo");
+
+        if (
+            !seoAnalysis &&
+            !seoAnalysisMutation.isPending &&
+            business?.google_maps_link
+        ) {
+            seoAnalysisMutation.mutate();
+        }
+
+    }}
+    label="SEO Analysis"
+    theme={theme}
+/>
             </div>
 
             {activeTab === "overview" && (
@@ -332,6 +410,13 @@ function BusinessDetails() {
                     theme={theme}
                 />
             )}
+            {activeTab === "seo" && (
+    <SEOAnalysis
+        data={seoAnalysis}
+        loading={seoLoading}
+        theme={theme}
+    />
+)}
         </div>
     );
 }
